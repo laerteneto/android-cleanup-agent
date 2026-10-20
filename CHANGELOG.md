@@ -24,6 +24,8 @@ cleanup of a Thomson Go Plus Pro (Android 14).
   checks with automatic rollback, keep-awake during runs, resume after a drop.
 - Restore from the run log, standalone `restore.sh`, `verify` for drift.
 - Reports: terminal, Markdown, offline HTML, redacted shareable artifact.
+- Claude Code plugin: `cleanup`, `audit`, `restore` skills; risk judge and report
+  agents; bash and write guard hooks.
 
 ### Fixed (from the first phone test: Galaxy S22, Android 16)
 - A removed app that is not in the system image was recorded as restorable with
@@ -39,8 +41,6 @@ cleanup of a Thomson Go Plus Pro (Android 14).
   state about 10 s later and a raw `adb reboot` skips the normal shutdown.
   `reboot` now waits until the last change is 15 s old and restarts through
   the power manager (`svc power reboot`), falling back to `adb reboot`.
-- Claude Code plugin: `cleanup`, `audit`, `restore` skills; risk judge and report
-  agents; bash and write guard hooks.
 
 ### Security
 - Every token sent to the device shell is validated; adb runs with argument arrays.
