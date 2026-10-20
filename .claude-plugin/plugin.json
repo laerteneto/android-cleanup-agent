@@ -1,7 +1,7 @@
 {
   "name": "android-cleanup-agent",
   "displayName": "Android Cleanup Agent",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Clean up and speed up an Android phone, tablet or TV over adb, without root: Claude audits the device, asks how you use it, proposes a plan you sign off, applies it with health checks and shows before/after results. Every change is logged and reversible.",
   "author": {
     "name": "William Oliveira",
@@ -10,5 +10,14 @@
   "homepage": "https://willcoliveira.github.io/android-cleanup-agent/",
   "repository": "https://github.com/willcoliveira/android-cleanup-agent",
   "license": "MIT",
-  "keywords": ["android", "adb", "debloat", "bloatware", "android-tv", "google-tv", "no-root", "performance"]
+  "keywords": [
+    "android",
+    "adb",
+    "debloat",
+    "bloatware",
+    "android-tv",
+    "google-tv",
+    "no-root",
+    "performance"
+  ]
 }

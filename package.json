@@ -1,6 +1,6 @@
 {
   "name": "android-cleanup-agent",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Clean up and speed up an Android phone, tablet or TV over adb, without root: audit, explain, approve, apply, results. Every change is logged and reversible. A CLI and Claude Code plugin.",
   "type": "module",
   "bin": {

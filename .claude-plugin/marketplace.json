@@ -12,9 +12,14 @@
       "name": "android-cleanup-agent",
       "source": "./",
       "description": "Clean up and speed up an Android phone, tablet or TV over adb: audit, plan, sign-off, apply, results. Reversible, no root.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "category": "productivity",
-      "keywords": ["android", "adb", "debloat", "android-tv"]
+      "keywords": [
+        "android",
+        "adb",
+        "debloat",
+        "android-tv"
+      ]
     }
   ]
 }
