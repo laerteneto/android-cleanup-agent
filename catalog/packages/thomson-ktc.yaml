@@ -1,0 +1,15 @@
+# Thomson Go / KTC portable screens (com.kgzn.* system apps). The quick menu,
+# setup, updater and factory tool are on the never-touch list.
+match:
+  packagesAny: ['com.kgzn.*']
+packages:
+  - id: com.kgzn.castscreen
+    title: Thomson screen cast receiver
+    vendor: ktc
+    category: oem-apps
+    classes: [tablet-tv]
+    risk: medium
+    action: disable
+    features: [cast]
+    confidence: verified
+    verifiedOn: [tablet-tv]

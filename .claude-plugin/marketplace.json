@@ -1,0 +1,20 @@
+{
+  "name": "android-cleanup-agent",
+  "owner": {
+    "name": "William Oliveira",
+    "url": "https://github.com/willcoliveira"
+  },
+  "metadata": {
+    "description": "Safe, approval-driven Android cleanup over adb for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "android-cleanup-agent",
+      "source": "./",
+      "description": "Clean up and speed up an Android phone, tablet or TV over adb: audit, plan, sign-off, apply, results. Reversible, no root.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "keywords": ["android", "adb", "debloat", "android-tv"]
+    }
+  ]
+}

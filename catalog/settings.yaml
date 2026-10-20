@@ -1,0 +1,80 @@
+# Settings the planner may offer. A change is only offered when the current value
+# is listed in `from` (a value the user chose themselves is left alone), and the
+# original value is recorded so `restore` can put it back (unset → deleted again).
+settings:
+  - id: animation-window
+    title: Window animations at half length
+    category: performance
+    ns: global
+    key: window_animation_scale
+    target: '0.5'
+    from: ['1.0', '1', '1.5', '2.0', 'null']
+    via: settings
+    symptoms: [slow-menus, slow-apps]
+    risk: low
+  - id: animation-transition
+    title: Screen transitions at half length
+    category: performance
+    ns: global
+    key: transition_animation_scale
+    target: '0.5'
+    from: ['1.0', '1', '1.5', '2.0', 'null']
+    via: settings
+    symptoms: [slow-menus, slow-apps]
+    risk: low
+  - id: animation-animator
+    title: In-app animations at half length
+    category: performance
+    ns: global
+    key: animator_duration_scale
+    target: '0.5'
+    from: ['1.0', '1', '1.5', '2.0', 'null']
+    via: settings
+    symptoms: [slow-menus, slow-apps]
+    risk: low
+  - id: wifi-scan-always
+    title: Stop Wi-Fi scanning in the background
+    category: background-scanning
+    ns: global
+    key: wifi_scan_always_enabled
+    target: '0'
+    from: ['1']
+    via: settings
+    features: [location]
+    risk: low
+    notes: ['Wi-Fi keeps scanning for nearby networks to help location even when Wi-Fi is off.']
+  - id: ble-scan-always
+    title: Stop Bluetooth scanning in the background
+    category: background-scanning
+    ns: global
+    key: ble_scan_always_enabled
+    target: '0'
+    from: ['1']
+    via: settings
+    features: [location, bluetooth]
+    risk: low
+    notes: ['Bluetooth keeps scanning for nearby devices to help location even when Bluetooth is off.']
+  - id: bluetooth-off
+    title: Turn Bluetooth off
+    category: radios
+    ns: global
+    key: bluetooth_on
+    target: '0'
+    from: ['1']
+    via: bluetooth
+    # Android TV and Google TV remotes are Bluetooth devices: never offered there.
+    classes: [phone, tablet, tablet-tv]
+    features: [bluetooth]
+    risk: medium
+    notes: ['Can be switched back on from the quick settings at any time.']
+  - id: location-off
+    title: Turn location off
+    category: radios
+    ns: secure
+    key: location_mode
+    target: '0'
+    from: ['1', '2', '3']
+    via: location
+    features: [location]
+    risk: medium
+    notes: ['Apps that need your location (weather, maps, find my device) stop working until it is back on.']

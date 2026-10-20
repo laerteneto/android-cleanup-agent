@@ -1,0 +1,49 @@
+# Android TV and Google TV extras. Leanback devices only.
+packages:
+  - id: com.google.android.katniss
+    title: Google voice search for TV
+    vendor: google
+    category: assistant-voice
+    classes: [android-tv, google-tv]
+    risk: high
+    action: disable
+    features: [voice]
+    homeCheck: true
+    confidence: community
+    notes: ['Powers the microphone button on the remote.']
+  - id: com.google.android.youtube.tvmusic
+    title: YouTube Music for TV
+    vendor: google
+    category: media-apps
+    classes: [android-tv, google-tv]
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.tvrecommendations
+    title: TV home-screen recommendations
+    vendor: google
+    category: google-apps
+    classes: [android-tv]
+    risk: medium
+    action: disable
+    homeCheck: true
+    confidence: community
+  - id: com.google.android.apps.mediashell
+    title: Chromecast built-in
+    vendor: google
+    category: media-apps
+    classes: [android-tv, google-tv]
+    risk: high
+    action: disable
+    features: [cast]
+    homeCheck: true
+    confidence: community
+  - id: com.google.android.backdrop
+    title: Ambient mode (TV screensaver)
+    vendor: google
+    category: google-apps
+    classes: [android-tv, google-tv]
+    risk: medium
+    action: disable
+    features: [screensaver]
+    confidence: community

@@ -1,0 +1,241 @@
+# Google apps preinstalled through GMS. Offered only when present, enabled and not
+# used recently; removal is per user and comes back with `restore` or from the
+# Play Store. Verified entries were removed and restored on a real device.
+packages:
+  - id: com.google.android.gm
+    title: Gmail
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium }
+    action: uninstall-user
+    features: [email]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.calendar
+    title: Google Calendar
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium }
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Refreshes its widgets every midnight and syncs in the background even if never opened.']
+  - id: com.google.android.apps.maps
+    title: Google Maps
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium }
+    action: uninstall-user
+    features: [location]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.docs
+    title: Google Drive
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.keep
+    title: Google Keep
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.photos
+    title: Google Photos
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium, tablet: medium }
+    action: uninstall-user
+    features: [photos, camera]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Runs a background backup job. On a phone, check your photos are backed up before removing it.']
+  - id: com.google.android.apps.tachyon
+    title: Google Meet
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    features: [calls]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.bard
+    title: Gemini
+    vendor: google
+    category: assistant-voice
+    risk: low
+    action: uninstall-user
+    features: [voice]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.nbu.files
+    title: Files by Google
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium, tablet: medium }
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.calculator
+    title: Calculator
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.deskclock
+    title: Clock (alarms and timers)
+    vendor: google
+    category: google-apps
+    classes: [tablet-tv, tablet]
+    risk: medium
+    action: uninstall-user
+    features: [alarms, screensaver]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Also provides the clock screensaver on some devices.']
+  - id: com.google.android.videos
+    title: Google TV (Play Movies)
+    vendor: google
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.youtube.music
+    title: YouTube Music
+    vendor: google
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.google.android.apps.magazines
+    title: Google News
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.apps.podcasts
+    title: Google Podcasts
+    vendor: google
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.apps.youtube.kids
+    title: YouTube Kids
+    vendor: google
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.apps.tips
+    title: Pixel Tips
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.apps.subscriptions.red
+    title: Google One
+    vendor: google
+    category: google-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+    notes: ['Manages Google storage plans and phone backup; keep it if you use Google One backup.']
+  - id: com.google.android.play.games
+    title: Google Play Games
+    vendor: google
+    category: games
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.google.android.apps.wellbeing
+    title: Digital Wellbeing
+    vendor: google
+    category: google-apps
+    risk: low
+    riskByClass: { phone: medium }
+    action: disable
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Screen-time tracking. On phones it also runs Bedtime mode and Focus mode.']
+  - id: com.google.android.googlequicksearchbox
+    title: Google app (search bar, Discover, Hey Google)
+    vendor: google
+    category: assistant-voice
+    risk: high
+    action: disable
+    features: [voice]
+    homeCheck: true
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Often the largest background memory user. Some home screens embed its search bar, so it is turned off alone and the home screen is checked straight away.']
+  - id: com.google.android.tts
+    title: Speech Services by Google (text-to-speech)
+    vendor: google
+    category: assistant-voice
+    risk: medium
+    action: disable
+    features: [voice, accessibility]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Reads text aloud for voice answers and screen readers.']
+  - id: com.android.contacts
+    title: Contacts (AOSP)
+    vendor: aosp
+    category: google-apps
+    classes: [tablet-tv, android-tv, google-tv]
+    risk: low
+    action: uninstall-user
+    features: [calls]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.android.soundrecorder
+    title: Sound Recorder (AOSP)
+    vendor: aosp
+    category: google-apps
+    classes: [tablet-tv, android-tv, google-tv, tablet]
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.android.camera2
+    title: Camera (AOSP)
+    vendor: aosp
+    category: google-apps
+    classes: [tablet-tv, android-tv, google-tv]
+    risk: low
+    action: uninstall-user
+    features: [camera]
+    confidence: verified
+    verifiedOn: [tablet-tv]
+  - id: com.android.bips
+    title: Default print service
+    vendor: aosp
+    category: google-apps
+    classes: [tablet-tv, android-tv, google-tv]
+    risk: low
+    action: disable
+    confidence: community
+  - id: com.google.android.printservice.recommendation
+    title: Print service recommendations
+    vendor: google
+    category: google-apps
+    risk: low
+    action: disable
+    confidence: community

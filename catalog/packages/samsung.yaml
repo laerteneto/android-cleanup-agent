@@ -1,0 +1,88 @@
+# Samsung (One UI). Some packages are protected by Knox and the change is refused;
+# that is reported as failed and never retried.
+match:
+  manufacturer: [samsung]
+packages:
+  - id: com.samsung.android.bixby.agent
+    title: Bixby Voice
+    vendor: samsung
+    category: assistant-voice
+    risk: medium
+    action: disable
+    features: [voice]
+    confidence: community
+  - id: com.samsung.android.bixby.wakeup
+    title: Bixby voice wake-up
+    vendor: samsung
+    category: assistant-voice
+    risk: medium
+    action: disable
+    features: [voice]
+    confidence: community
+  - id: com.samsung.android.visionintelligence
+    title: Bixby Vision
+    vendor: samsung
+    category: assistant-voice
+    risk: low
+    action: disable
+    features: [camera]
+    confidence: community
+  - id: com.samsung.android.app.spage
+    title: Samsung Free (left home-screen page)
+    vendor: samsung
+    category: oem-apps
+    risk: medium
+    action: uninstall-user
+    homeCheck: true
+    confidence: community
+  - id: com.samsung.android.game.gamehome
+    title: Game Launcher
+    vendor: samsung
+    category: games
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.samsung.android.game.gametools
+    title: Game Booster
+    vendor: samsung
+    category: games
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.samsung.android.aremoji
+    title: AR Emoji
+    vendor: samsung
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    features: [camera]
+    confidence: community
+  - id: com.samsung.android.ardrawing
+    title: AR Doodle
+    vendor: samsung
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    features: [camera]
+    confidence: community
+  - id: com.samsung.android.app.tips
+    title: Samsung Tips
+    vendor: samsung
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.samsung.android.stickercenter
+    title: Sticker Center
+    vendor: samsung
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.samsung.android.forest
+    title: Samsung Digital Wellbeing
+    vendor: samsung
+    category: oem-apps
+    risk: medium
+    action: disable
+    confidence: community

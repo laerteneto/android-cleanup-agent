@@ -1,0 +1,82 @@
+{
+  "name": "android-cleanup-agent",
+  "version": "0.1.0",
+  "description": "Clean up and speed up an Android phone, tablet or TV over adb, without root: audit, explain, approve, apply, results. Every change is logged and reversible. A CLI and Claude Code plugin.",
+  "type": "module",
+  "bin": {
+    "android-cleanup-agent": "dist/cli/index.js"
+  },
+  "files": [
+    "dist/",
+    "catalog/",
+    "skills/",
+    "agents/",
+    "hooks/",
+    "bin/",
+    ".claude-plugin/",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "sync:plugin": "rm -rf skills agents && cp -R .claude/skills skills && cp -R .claude/agents agents",
+    "prebuild": "npm run sync:plugin",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "check:mirror": "diff -rq .claude/skills skills && diff -rq .claude/agents agents",
+    "check:pack": "node scripts/check-pack.mjs",
+    "check:forbidden": "node scripts/check-forbidden.mjs",
+    "check": "npm run build && npm run lint && npm test && npm run check:mirror && npm run check:pack",
+    "version": "node scripts/sync-version.mjs && git add .claude-plugin/plugin.json .claude-plugin/marketplace.json",
+    "prepublishOnly": "npm run check"
+  },
+  "keywords": [
+    "android",
+    "adb",
+    "debloat",
+    "bloatware",
+    "cleanup",
+    "android-tv",
+    "google-tv",
+    "no-root",
+    "performance",
+    "uninstall-system-apps",
+    "wireless-debugging",
+    "cli",
+    "claude",
+    "claude-code",
+    "plugin",
+    "ai-agent"
+  ],
+  "author": "William Oliveira",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.4.0"
+  },
+  "packageManager": "npm@10.9.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willcoliveira/android-cleanup-agent.git"
+  },
+  "homepage": "https://willcoliveira.github.io/android-cleanup-agent/",
+  "bugs": {
+    "url": "https://github.com/willcoliveira/android-cleanup-agent/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/willcoliveira"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

@@ -1,0 +1,6 @@
+# Placeholder list used in CI. Your real list (LAN IPs, device serials, account
+# emails, Wi-Fi names, family names) lives at
+# ~/.config/android-cleanup-agent/forbidden-strings.txt and is never committed.
+# One term per line, whole-word, case-insensitive.
+example-device-serial
+example-family-name

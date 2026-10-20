@@ -1,0 +1,93 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Set up android-cleanup-agent and connect an Android device over adb',
+  description: 'Install the CLI, enable developer options and debugging on an Android phone, tablet, Android TV or Google TV, connect over USB or Wi-Fi, and run a first read-only audit.',
+  tool: [{ '@type': 'HowToTool', name: 'adb (Android platform-tools 30+)' }, { '@type': 'HowToTool', name: 'Node.js 22+' }],
+  step: [
+    { '@type': 'HowToStep', name: 'Install', text: 'Install adb and run npm i -g android-cleanup-agent.' },
+    { '@type': 'HowToStep', name: 'Enable developer options', text: 'Tap the build number seven times in the About screen of the device settings.' },
+    { '@type': 'HowToStep', name: 'Turn on debugging', text: 'Turn on USB debugging, Wireless debugging (Android 11+) or Network debugging on older TVs.' },
+    { '@type': 'HowToStep', name: 'Connect', text: 'Plug in a USB cable, or pair and connect over Wi-Fi, then accept the Allow debugging prompt on the screen.' },
+    { '@type': 'HowToStep', name: 'Run a read-only audit', text: 'Run android-cleanup-agent doctor, then audit --summary, or ask Claude Code to clean up the device.' },
+  ],
+};
+---
+<Base title="Getting started: connect Android over adb (USB or Wi-Fi) | android-cleanup-agent" description="Install android-cleanup-agent, enable developer options and USB or Wireless debugging on a phone, tablet, Android TV or Google TV, pair over Wi-Fi, run your first audit, and fix unauthorized or offline devices." jsonLd={jsonLd}>
+  <h1>Getting started</h1>
+  <p class="lead">You need a computer (macOS, Linux, or Windows via WSL), the device on the same Wi-Fi or a USB cable, and about ten minutes. No root, no app installed on the device.</p>
+
+  <h2>1. Install</h2>
+  <ul>
+    <li><strong>Node.js 22 or later.</strong></li>
+    <li><strong>adb</strong> from Android platform-tools 30 or later. On macOS: <code>brew install android-platform-tools</code>. On Debian/Ubuntu: <code>sudo apt install adb</code>. Or download platform-tools from the Android developer site and add it to your PATH.</li>
+  </ul>
+  <pre><code>npm i -g android-cleanup-agent
+android-cleanup-agent doctor</code></pre>
+  <p>Or run it without installing: <code>npx android-cleanup-agent doctor</code>. <code>doctor</code> checks adb, Wi-Fi debugging discovery and connected devices.</p>
+
+  <h2>2. Enable developer options and debugging</h2>
+  <p>The path depends on the kind of device. On all of them you tap the build number seven times until it says you are a developer.</p>
+
+  <h3>Phone or tablet (including TVs running tablet Android)</h3>
+  <ol>
+    <li>Settings → About phone (or About tablet) → tap <strong>Build number</strong> 7 times. On some brands it is under Software information.</li>
+    <li>Settings → System → <strong>Developer options</strong>.</li>
+    <li>Turn on <strong>USB debugging</strong> for a cable, or <strong>Wireless debugging</strong> (Android 11+) for Wi-Fi. For Wi-Fi, open Wireless debugging → <strong>Pair device with pairing code</strong>; it shows an IP address and a 6-digit code.</li>
+  </ol>
+
+  <h3>Android TV</h3>
+  <ol>
+    <li>Settings → Device Preferences → About → tap <strong>Build</strong> 7 times.</li>
+    <li>Settings → Device Preferences → Developer options → turn on USB debugging, or Wireless debugging where offered.</li>
+  </ol>
+
+  <h3>Google TV</h3>
+  <ol>
+    <li>Settings → System → About → tap <strong>Android TV OS build</strong> 7 times.</li>
+    <li>Settings → System → Developer options → turn on USB debugging, or Wireless debugging where offered.</li>
+  </ol>
+
+  <h3>Older Android TV devices</h3>
+  <p>Before Android 11 there is no Wireless debugging. Many older TVs have <strong>Network debugging</strong> (or ADB over network) in Developer options instead. It listens on port 5555 and needs no pairing code: just <code>connect --host &lt;ip&gt;</code>.</p>
+
+  <h2>3. Connect</h2>
+  <h3>USB</h3>
+  <p>Plug in the cable, run <code>android-cleanup-agent devices</code>, and accept the <strong>Allow USB debugging?</strong> prompt on the device screen. Tick <em>Always allow from this computer</em>.</p>
+  <h3>Wi-Fi</h3>
+  <pre><code>android-cleanup-agent pair --host 192.168.1.40 --code 123456
+android-cleanup-agent connect --host 192.168.1.40</code></pre>
+  <p>Use the IP address and code shown on the device's pairing screen. You do not need to type ports: the pairing and connect ports are found automatically over mDNS (pass <code>--port</code> only if discovery fails on your network). Pairing is needed once per computer; after that, <code>connect</code> is enough.</p>
+
+  <h2>4. First run</h2>
+  <h3>With Claude Code</h3>
+  <pre><code>/plugin marketplace add willcoliveira/android-cleanup-agent
+/plugin install android-cleanup-agent@android-cleanup-agent
+/android-cleanup-agent:cleanup</code></pre>
+  <p>Claude runs the audit, asks what feels wrong and which features you use, explains the plan, and asks for approvals before anything changes. Use <code>/android-cleanup-agent:audit</code> for a look without changes. <a href={`${base}plugin/`}>More about the plugin</a>.</p>
+  <h3>Without Claude (CLI only)</h3>
+  <pre><code>android-cleanup-agent audit --summary
+android-cleanup-agent plan --uses cast,typing --power mains --symptoms slow-menus,storage --keep com.google.android.youtube.tv
+android-cleanup-agent approvals init
+android-cleanup-agent approvals show
+android-cleanup-agent approvals set --category google-apps=true --category performance=true
+android-cleanup-agent apply          # dry run
+android-cleanup-agent apply --yes
+android-cleanup-agent results</code></pre>
+  <p>All approvals start off. Apps you installed and high-risk items need their own <code>--item &lt;id&gt;=true</code>. The plan can also read your answers from a file with <code>plan --answers answers.yaml</code> (uses, power, symptoms, keep). See the <a href={`${base}cli/`}>CLI reference</a>.</p>
+
+  <h2>Troubleshooting</h2>
+  <table>
+    <tr><th>What you see</th><th>What to do</th></tr>
+    <tr><td><code>unauthorized</code></td><td>The device has not accepted this computer. Look at the device screen for the <em>Allow debugging</em> prompt and accept it. If it never appears, revoke USB debugging authorizations in Developer options, unplug and reconnect.</td></tr>
+    <tr><td><code>offline</code></td><td>Unplug and reconnect, or run <code>connect</code> again. Over Wi-Fi, check that the computer and device are on the same network and the device is awake.</td></tr>
+    <tr><td>Connection refused after it worked before</td><td>Wireless debugging picks a new port each time it is turned on. Run <code>connect --host &lt;ip&gt;</code> again and it finds the new port; pairing is not needed again.</td></tr>
+    <tr><td>Nothing found after a restart</td><td>Wireless debugging turns itself off after every restart of the device. Turn it on again in Developer options, then <code>connect</code>.</td></tr>
+    <tr><td>Exit code 3</td><td>No device, or not authorized. See the first rows.</td></tr>
+    <tr><td>Exit code 5 during <code>apply</code></td><td>The connection dropped or a different device answered. Reconnect the same device and run <code>apply --yes --resume</code>.</td></tr>
+    <tr><td>Exit code 6</td><td>Unsupported device (for example Fire TV).</td></tr>
+  </table>
+</Base>

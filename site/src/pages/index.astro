@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'android-cleanup-agent',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'macOS, Linux, Windows (via WSL)',
+  softwareRequirements: 'Node.js 22 or later, adb (Android platform-tools 30 or later)',
+  description: 'Free, open-source CLI and Claude Code plugin that cleans up and speeds up an Android phone, tablet, Android TV or Google TV over adb, without root. Audit, plan, approve, apply, and undo every change.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  license: 'https://opensource.org/licenses/MIT',
+  url: 'https://willcoliveira.github.io/android-cleanup-agent/',
+  codeRepository: 'https://github.com/willcoliveira/android-cleanup-agent',
+  author: { '@type': 'Person', name: 'William Oliveira', url: 'https://github.com/willcoliveira' },
+};
+---
+<Base title="Debloat and speed up Android over adb, without root | android-cleanup-agent" description="Open-source CLI and Claude Code plugin to remove bloatware and speed up an Android phone, tablet, Android TV or Google TV over adb, without root. Read-only audit, approvals, health checks, and a restore for every change." jsonLd={jsonLd}>
+  <h1>Clean up and speed up an Android device, without root</h1>
+  <p class="lead">android-cleanup-agent looks at what your Android phone, tablet or TV is actually doing, offers to remove or turn off the apps you never use, applies only what you approve, and shows RAM in use and storage free before and after. Every change it makes can be undone. A free command-line tool and a Claude Code plugin.</p>
+  <p><a class="cta" href={`${base}getting-started/`}>Get started</a> &nbsp; <code>npm install -g android-cleanup-agent</code></p>
+
+  <h2>Which devices</h2>
+  <div class="grid">
+    <div class="card"><h3>Phones and tablets</h3><p>Any Android phone or tablet with USB debugging or Wireless debugging (Android 11+). Catalog entries for Google, Samsung and Xiaomi/Redmi preloads.</p></div>
+    <div class="card"><h3>Android TV and Google TV</h3><p>TV sticks, boxes and smart TVs running Android TV or Google TV. Bluetooth is never turned off on these, because the remote uses it.</p></div>
+    <div class="card"><h3>TVs running tablet Android</h3><p>Portable touchscreen TVs such as the Thomson Go Plus Pro run tablet Android rather than Android TV. They are supported too; see the <a href={`${base}guides/thomson-go-tv-remove-bloatware-without-root/`}>Thomson guide</a>.</p></div>
+    <div class="card"><h3>Not supported</h3><p>Amazon Fire TV. The tool exits with code 6 on unsupported devices instead of guessing.</p></div>
+  </div>
+
+  <h2>How it works</h2>
+  <ol>
+    <li><strong>Connect:</strong> over USB, or over Wi-Fi with <code>pair --host &lt;ip&gt; --code &lt;6 digits&gt;</code> then <code>connect --host &lt;ip&gt;</code>. The ports are found automatically over mDNS.</li>
+    <li><strong>Audit (read-only):</strong> installed apps, usage history, storage per app, memory per app, what wakes the device (alarms), heat, relevant settings and days since the last restart.</li>
+    <li><strong>Interview:</strong> what feels wrong, whether it runs on battery or mains power, which features you use (Bluetooth, cast, location, voice, typing, camera, calls, SMS, alarms, screensaver, accessibility, email, photos) and your main apps.</li>
+    <li><strong>Plan (deterministic):</strong> only packages in a curated YAML catalog are offered, plus apps you installed yourself and haven't opened in 90+ days, which are offered unticked. Apps used in the last 60 days are not offered. Unknown system apps are reported, never offered.</li>
+    <li><strong>Approve:</strong> per category. Apps you installed and high-risk items each need their own explicit yes. A risk-judge sub-agent can veto an item, never add one.</li>
+    <li><strong>Apply:</strong> a dry run unless you pass <code>--yes</code>. Each item is re-checked against the audited state right before it changes. Risky items are done alone and followed by a health check, with automatic rollback if it fails.</li>
+    <li><strong>Restart (optional):</strong> <code>reboot --yes</code>, refused while something is playing.</li>
+    <li><strong>Results and report:</strong> RAM in use and storage free before and after, as terminal output, Markdown, an offline HTML page, or a redacted summary you can share.</li>
+  </ol>
+
+  <h2>What it looks like</h2>
+  <pre><code>$ android-cleanup-agent doctor
+$ android-cleanup-agent devices
+$ android-cleanup-agent audit --summary
+$ android-cleanup-agent plan --uses cast,typing --power mains --symptoms slow-menus
+$ android-cleanup-agent approvals init
+$ android-cleanup-agent approvals set --category google-apps=true --category performance=true
+$ android-cleanup-agent apply            # dry run: shows what would change
+$ android-cleanup-agent apply --yes
+$ android-cleanup-agent reboot --yes
+$ android-cleanup-agent results
+$ android-cleanup-agent report --format html</code></pre>
+  <p>With the Claude Code plugin you skip the flags: say <em>"my Google TV is slow, help me clean it up"</em> and Claude runs the same commands and asks you the questions. See the <a href={`${base}cli/`}>CLI reference</a> for every option.</p>
+
+  <h2>What it never touches</h2>
+  <ul>
+    <li>The apps currently acting as your home screen, keyboard, dialer, SMS app, WebView, accessibility services or device owner. This is checked live, right before every change, not from a fixed list.</li>
+    <li>A never-touch list of core packages: the Android framework, System UI, Settings, Google Play services, the Play Store, system data providers, Wi-Fi and network components, setup and update modules, certificates, Samsung Knox, Xiaomi Security and Find Device, and more.</li>
+    <li>Your data. Apps are removed with <code>pm uninstall -k --user &lt;current user&gt;</code>, which keeps app data and only affects the current user, so <code>restore</code> can bring them back. Clearing an app's data is a separate command, for one app at a time, and is never part of a plan.</li>
+  </ul>
+  <p><a href={`${base}safety/`}>Read how safety and restore work</a>.</p>
+
+  <h2>Use it with Claude Code</h2>
+  <pre><code>/plugin marketplace add willcoliveira/android-cleanup-agent
+/plugin install android-cleanup-agent@android-cleanup-agent</code></pre>
+  <p>Then run <code>/android-cleanup-agent:cleanup</code>, or just describe the problem. <a href={`${base}plugin/`}>How the plugin works</a>.</p>
+
+  <h2>Guides</h2>
+  <ul>
+    <li><a href={`${base}guides/thomson-go-tv-remove-bloatware-without-root/`}>Remove bloatware from a Thomson Go TV without root</a> (a real run)</li>
+    <li><a href={`${base}guides/speed-up-slow-google-tv-without-root/`}>Speed up a slow Google TV without root</a></li>
+    <li><a href={`${base}guides/`}>All guides</a></li>
+  </ul>
+</Base>

@@ -1,0 +1,68 @@
+# Xiaomi / Redmi / POCO (MIUI and HyperOS). Security center and Find Device are on
+# the never-touch list; removing them can make MIUI boot-loop.
+match:
+  manufacturer: [Xiaomi]
+packages:
+  - id: com.miui.analytics
+    title: MIUI Analytics
+    vendor: xiaomi
+    category: analytics
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.miui.msa.global
+    title: MIUI System Ads
+    vendor: xiaomi
+    category: analytics
+    risk: medium
+    action: uninstall-user
+    confidence: community
+  - id: com.xiaomi.mipicks
+    title: GetApps (Xiaomi app store)
+    vendor: xiaomi
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.mi.globalbrowser
+    title: Mi Browser
+    vendor: xiaomi
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.miui.videoplayer
+    title: Mi Video
+    vendor: xiaomi
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.miui.player
+    title: Mi Music
+    vendor: xiaomi
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.xiaomi.glgm
+    title: Xiaomi Games
+    vendor: xiaomi
+    category: games
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.miui.yellowpage
+    title: Yellow Pages
+    vendor: xiaomi
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.miui.bugreport
+    title: MIUI Feedback
+    vendor: xiaomi
+    category: oem-apps
+    risk: low
+    action: uninstall-user
+    confidence: community

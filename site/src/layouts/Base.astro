@@ -1,0 +1,91 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  jsonLd?: Record<string, unknown>;
+  ogType?: string;
+}
+const { title, description, jsonLd, ogType = 'website' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(`${base}og.svg`, Astro.site).href;
+const nav = [
+  ['', 'Overview'],
+  ['getting-started/', 'Getting started'],
+  ['safety/', 'Safety & restore'],
+  ['cli/', 'CLI'],
+  ['plugin/', 'Claude Code plugin'],
+  ['guides/', 'Guides'],
+  ['faq/', 'FAQ'],
+];
+const here = Astro.url.pathname.replace(base, '');
+const isOn = (href: string) => (href === '' ? here === '' : here.startsWith(href));
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <link rel="sitemap" href={`${base}sitemap-index.xml`} />
+    <meta name="theme-color" content="#1a8f5a" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="android-cleanup-agent" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <style is:global>
+      :root { --bg:#fbfcfb; --fg:#1b1f1d; --muted:#5f6b65; --card:#fff; --line:#e1e7e3; --accent:#1a8f5a; --on-accent:#fff; --code:#eff4f1; --note:#e9f6ef; }
+      @media (prefers-color-scheme: dark) { :root { --bg:#0f1311; --fg:#eef3f0; --muted:#a3b1aa; --card:#171d1a; --line:#27312c; --accent:#3ddc84; --on-accent:#0c1f15; --code:#1c2420; --note:#15261d; } }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; }
+      a { color:var(--accent); }
+      header { border-bottom:1px solid var(--line); background:var(--card); }
+      .bar { max-width:1080px; margin:0 auto; padding:12px 16px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+      .brand { font-weight:700; color:var(--fg); text-decoration:none; margin-right:auto; }
+      .wrap { max-width:1080px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:220px 1fr; gap:32px; }
+      nav.side { position:sticky; top:0; align-self:start; padding:24px 0; }
+      nav.side a { display:block; padding:6px 10px; border-radius:8px; color:var(--fg); text-decoration:none; }
+      nav.side a.on { background:var(--code); font-weight:600; }
+      main { padding:24px 0 80px; min-width:0; }
+      h1 { font-size:34px; line-height:1.2; margin:8px 0 12px; } h2 { margin-top:36px; } h3 { margin-top:24px; }
+      code, pre { font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:var(--code); border-radius:6px; }
+      code { padding:1px 5px; overflow-wrap:anywhere; } pre { padding:14px 16px; overflow-x:auto; }
+      pre code { padding:0; background:none; overflow-wrap:normal; }
+      table { border-collapse:collapse; width:100%; display:block; overflow-x:auto; }
+      th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+      th { font-size:13px; color:var(--muted); }
+      .lead { font-size:19px; color:var(--muted); }
+      .meta { color:var(--muted); font-size:14px; }
+      .note { background:var(--note); border-left:4px solid var(--accent); border-radius:8px; padding:12px 16px; margin:16px 0; }
+      .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:20px 0; }
+      .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+      .card h3 { margin:0 0 6px; font-size:16px; }
+      .card p { margin:0; color:var(--muted); font-size:15px; }
+      .cta { display:inline-block; background:var(--accent); color:var(--on-accent); padding:10px 16px; border-radius:10px; text-decoration:none; font-weight:600; }
+      footer { border-top:1px solid var(--line); color:var(--muted); font-size:14px; padding:20px 16px; text-align:center; }
+      @media (max-width: 760px) { .wrap { grid-template-columns:1fr; gap:0; } nav.side { position:static; padding:12px 0 0; display:flex; flex-wrap:wrap; gap:4px; } h1 { font-size:28px; } }
+    </style>
+  </head>
+  <body>
+    <header><div class="bar"><a class="brand" href={base}>android-cleanup-agent</a><a href="https://github.com/willcoliveira/android-cleanup-agent">GitHub</a><a href="https://www.npmjs.com/package/android-cleanup-agent">npm</a></div></header>
+    <div class="wrap">
+      <nav class="side" aria-label="Documentation">
+        {nav.map(([href, label]) => <a href={`${base}${href}`} class={isOn(href) ? 'on' : ''} aria-current={isOn(href) ? 'page' : undefined}>{label}</a>)}
+      </nav>
+      <main><slot /></main>
+    </div>
+    <footer>MIT licensed · Runs on your computer · No telemetry · Made by <a href="https://github.com/willcoliveira">William Oliveira</a></footer>
+  </body>
+</html>

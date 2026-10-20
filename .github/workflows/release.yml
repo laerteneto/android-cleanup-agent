@@ -1,0 +1,42 @@
+name: release
+
+# Publishes to npm with provenance when a version tag is pushed. npm must land
+# before the plugin pins the version (the bin shim runs npx android-cleanup-agent@<version>).
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing + provenance
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - name: tag matches package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: test "v$(node -p "require('./package.json').version")" = "$TAG"
+      - run: npm run check
+      # The first release is published by hand (trusted publishing needs the package to exist).
+      - name: skip if this version is already on npm
+        id: published
+        run: |
+          if npm view "android-cleanup-agent@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.skip != 'true'
+        run: npm publish --provenance --access public

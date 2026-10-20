@@ -1,0 +1,54 @@
+# Third-party apps manufacturers preinstall on many devices.
+packages:
+  - id: com.amazon.avod.thirdpartyclient
+    title: Prime Video (preinstalled)
+    vendor: amazon
+    category: media-apps
+    risk: low
+    action: uninstall-user
+    confidence: verified
+    verifiedOn: [tablet-tv]
+    notes: ['Stays in memory in the background on some devices even if never opened.']
+  - id: com.netflix.partner.activation
+    title: Netflix partner activation
+    vendor: netflix
+    category: media-apps
+    risk: medium
+    action: uninstall-user
+    confidence: community
+    notes: ['Only links a preinstalled Netflix to the manufacturer; Netflix itself keeps working.']
+  - id: com.facebook.appmanager
+    title: Facebook App Manager
+    vendor: meta
+    category: social-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.facebook.services
+    title: Facebook Services
+    vendor: meta
+    category: social-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.facebook.system
+    title: Facebook App Installer
+    vendor: meta
+    category: social-apps
+    risk: low
+    action: uninstall-user
+    confidence: community
+  - id: com.microsoft.skydrive
+    title: OneDrive (preinstalled)
+    vendor: microsoft
+    category: oem-apps
+    risk: medium
+    action: uninstall-user
+    confidence: community
+  - id: com.linkedin.android
+    title: LinkedIn (preinstalled)
+    vendor: microsoft
+    category: social-apps
+    risk: low
+    action: uninstall-user
+    confidence: community

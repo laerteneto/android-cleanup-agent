@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const base = import.meta.env.BASE_URL;
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const iso = entry.data.date.toISOString().slice(0, 10);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: entry.data.title,
+  description: entry.data.description,
+  datePublished: iso,
+  url,
+  author: { '@type': 'Person', name: 'William Oliveira', url: 'https://github.com/willcoliveira' },
+  tool: [
+    { '@type': 'HowToTool', name: 'android-cleanup-agent' },
+    { '@type': 'HowToTool', name: 'adb (Android platform-tools 30+)' },
+  ],
+  step: entry.data.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+<Base title={`${entry.data.title} | android-cleanup-agent`} description={entry.data.description} jsonLd={jsonLd} ogType="article">
+  <p class="meta"><a href={`${base}guides/`}>Guides</a> · {entry.data.device} · <time datetime={iso}>{entry.data.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time></p>
+  <article>
+    <h1>{entry.data.title}</h1>
+    <Content />
+  </article>
+  <h2>Steps at a glance</h2>
+  <ol>{entry.data.steps.map((s) => <li><strong>{s.name}:</strong> {s.text}</li>)}</ol>
+  <p class="meta">New to the tool? Start with <a href={`${base}getting-started/`}>Getting started</a>. Every change can be undone; see <a href={`${base}safety/`}>Safety &amp; restore</a>.</p>
+</Base>

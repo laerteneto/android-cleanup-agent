@@ -1,0 +1,6 @@
+# Known devices whose class can't be read from the build alone. Matched on the
+# manufacturer/brand/platform and on marker packages; the first match wins.
+devices:
+  - name: KTC-built portable screens (Thomson Go and similar)
+    deviceClass: tablet-tv
+    packagesAny: ['com.kgzn.*']

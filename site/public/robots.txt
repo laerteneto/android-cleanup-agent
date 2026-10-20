@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://willcoliveira.github.io/android-cleanup-agent/sitemap-index.xml

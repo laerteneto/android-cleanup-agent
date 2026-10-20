@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Safety & restore: how every change is checked and undone | android-cleanup-agent" description="What android-cleanup-agent never touches, how it removes apps without deleting data, health checks with automatic rollback, the playback guard, restore and restore.sh, what cannot be restored, and privacy (no telemetry).">
+  <h1>Safety &amp; restore</h1>
+  <p class="lead">The tool is built so that a wrong choice costs you a <code>restore</code>, not a factory reset. This page lists every safeguard and its limits.</p>
+
+  <h2>What it never touches</h2>
+  <h3>Live roles</h3>
+  <p>Right before every change, the device is asked which apps currently hold a system role: the home screen (launcher), the keyboard, the dialer, the SMS app, the assistant, WebView, enabled accessibility services and any device owner (for example a work-profile manager). Those apps are skipped, whatever the plan says. Because this is checked live, it follows you if you changed your keyboard or launcher.</p>
+  <h3>The never-touch list</h3>
+  <p>A fixed list of packages is never offered, even if a catalog entry or an overlay names them. It covers the Android framework, System UI, Settings, adb's own shell, Google Play services and the Services Framework, the Play Store, WebView and its libraries, the permission controller and package installer, system data providers (media, contacts, settings, downloads, TV), Wi-Fi, networking and captive-portal components, setup wizards, system update modules, certificates and keychain, input devices (keyboards, remotes, game controllers), storage access and the file picker, plus vendor-critical packages such as Samsung Knox, the Xiaomi updater, Xiaomi Security center (removing it can boot-loop MIUI) and Xiaomi Find Device.</p>
+  <h3>What is never offered at all</h3>
+  <ul>
+    <li>Unknown system apps: reported in the audit, never offered.</li>
+    <li>Apps you used in the last 60 days.</li>
+    <li>Catalog entries tied to a feature you said you use (for example Chromecast built-in if you use cast).</li>
+    <li>Turning Bluetooth off on Android TV or Google TV, because the remote uses it.</li>
+    <li>Clearing an app's data. That is a separate command, <code>clear-data</code>, for one app at a time, only on request, and it asks you to type the package name twice. It cannot be undone and is never part of a plan.</li>
+  </ul>
+
+  <h2>Removal keeps your data</h2>
+  <p>Apps are removed with <code>pm uninstall -k --user &lt;current user&gt;</code>. That removes the app for the current user only; the APK stays on the system partition and <code>-k</code> keeps its data. Nothing is deleted from the system image, which is why no root is needed and why <code>restore</code> can bring the app back with <code>cmd package install-existing</code>. Some apps are disabled instead of removed; disabling is undone by re-enabling.</p>
+
+  <h2>Re-checked right before each change</h2>
+  <p>The plan is built from the audit. When you run <code>apply</code>, each item is checked again against the audited state: same device (by fingerprint), same package, still installed, still in the same state, not holding a live role. If anything differs, the item is skipped. <code>apply</code> is a dry run unless you pass <code>--yes</code>.</p>
+
+  <h2>Health checks and automatic rollback</h2>
+  <p>Higher-risk items, such as turning off the Google app, are applied alone, one at a time. After each one, a health check presses Home, opens your main apps (the ones you named in the interview) and reads the crash log. If the home screen or one of your apps fails, that change is rolled back automatically and the run tells you.</p>
+  <p>During a run the screen is kept awake so checks can run, and the original screen timeout setting is put back afterwards.</p>
+
+  <h2>Playback guard</h2>
+  <p>If something is playing, the health check waits instead of pressing Home, so it does not interrupt what you are watching. <code>reboot</code> is refused while something plays (unless you pass <code>--force-while-playing</code>).</p>
+
+  <h2>Dropped connections</h2>
+  <p>Wi-Fi connections drop. If the device disappears or a different device answers, <code>apply</code> stops with exit code 5. Reconnect and run <code>apply --yes --resume</code>; it continues where it left off and does not repeat finished items.</p>
+
+  <h2>Undo: restore, restore.sh and verify</h2>
+  <ul>
+    <li><code>restore</code> undoes a run's changes newest first: removed apps come back with <code>cmd package install-existing</code>, disabled apps are re-enabled, and settings are put back to their recorded value. A setting that was unset before is deleted again, not set to a guessed default. It is a dry run unless you pass <code>--yes</code>; use <code>--item &lt;id&gt;</code> to undo one change.</li>
+    <li>Every run also writes a <code>restore.sh</code> shell script. It finds the right device by fingerprint and undoes the run with plain adb, so you can recover even without the CLI installed.</li>
+    <li><code>verify</code> checks that a run's changes are still in place. System updates (OTA) sometimes re-enable or reinstall apps; <code>verify</code> lists what was reverted.</li>
+  </ul>
+
+  <h2>What cannot be restored</h2>
+  <table>
+    <tr><th>Change</th><th>Why</th><th>How to get it back</th></tr>
+    <tr><td>Apps you installed yourself</td><td>They have no copy on the system partition, so there is nothing to <code>install-existing</code>.</td><td>Reinstall from the Play Store. This is why they are offered unticked and need their own explicit yes.</td></tr>
+    <tr><td>Cleared app data (<code>clear-data</code>)</td><td>Data and logins are deleted.</td><td>Sign in again. Never part of a plan.</td></tr>
+    <tr><td>Cleared caches</td><td>Caches are temporary files.</td><td>Apps rebuild them as you use them; logins and settings are kept.</td></tr>
+    <tr><td>A factory-reset device</td><td>A reset brings every removed preinstalled app back by itself. The run's record on your computer no longer matches the device, so there is nothing for <code>restore</code> to do.</td><td>Nothing to restore; run the tool again if you want.</td></tr>
+  </table>
+
+  <h2>Privacy</h2>
+  <p>No telemetry, no account, no network calls of its own. Audits, plans, approvals and reports stay on your computer. Device identifiers are hashed before they are stored. The shareable summary is built from categories and numbers only: no model name, no package names, no list of your own apps. If you use the Claude Code plugin, Claude reads the compact summaries the CLI prints, under your own Claude Code account.</p>
+
+  <h2>Plugin hooks</h2>
+  <p>The Claude Code plugin ships hooks that block Claude from running raw device-changing commands such as <code>adb shell pm uninstall</code>, <code>adb shell settings put</code> or <code>adb reboot</code>, along with fastboot and root commands. Claude can only change the device through the CLI, so every change goes through the plan, your approvals, the re-checks, the health checks and the restore log. When Claude runs <code>apply --yes</code>, <code>restore --yes</code>, <code>reboot --yes</code> or <code>clear-data</code>, Claude Code's permission dialog asks you first. A second hook stops Claude from editing the tool's own run files. <a href={`${base}plugin/`}>How the plugin works</a>.</p>
+</Base>

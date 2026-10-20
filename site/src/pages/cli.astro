@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+const rows = [
+  ['doctor [--json]', 'Checks adb, Wi-Fi debugging discovery (mDNS) and connected devices'],
+  ['devices [--json]', 'Lists connected devices'],
+  ['pair --host <ip> --code <6 digits> [--port]', 'Pairs with a device over Wi-Fi (Wireless debugging → Pair device with pairing code). The port is found automatically'],
+  ['connect --host <ip> [--port]', 'Connects over Wi-Fi; the port is found automatically'],
+  ['audit [--summary | --json] [--class] [--serial]', 'Read-only look at the device: apps, usage, storage and memory per app, alarms (what wakes it), heat, settings, days since restart. --class overrides the detected class: phone, tablet, android-tv, google-tv, tablet-tv'],
+  ['plan [--uses --power --symptoms --keep | --answers <file>]', 'Builds the list of offered changes from the audit, the catalog and your answers. Deterministic: same inputs, same plan'],
+  ['approvals init | set | veto | show', 'Records which changes are approved. All start off. set takes --category <cat>=true|false and --item <id>=true|false (repeatable); veto --item <id> [--reason] is what the risk judge uses'],
+  ['apply [--yes] [--resume] [--serial]', 'Makes the approved changes. Dry run unless --yes. --resume continues a run interrupted by a dropped connection'],
+  ['clear-data --package <name> --confirm-package <name> --yes', "Clears ONE app's data and logins. Cannot be undone. Never part of a plan"],
+  ['reboot --yes [--force-while-playing]', 'Restarts the device; refused while something is playing'],
+  ['verify', "Checks that a run's changes are still in place, for example after a system update"],
+  ['restore [--item <id>] [--yes]', "Undoes a run's changes, newest first. Dry run unless --yes"],
+  ['results', 'RAM in use and storage free, before and after (re-measured on the device)'],
+  ['report --format terminal,md,html,json,artifact', 'Writes the run report: terminal, Markdown, offline HTML, JSON, or the redacted shareable summary (artifact)'],
+  ['runs', 'Lists past runs'],
+  ['catalog list | validate', 'Shows the effective package catalog; validates the catalog, your overlay or a package file'],
+];
+const codes = [
+  ['0', 'OK'],
+  ['1', 'Error'],
+  ['2', 'Bad usage (wrong or missing options)'],
+  ['3', 'No device, or the device has not authorized this computer'],
+  ['4', 'Needs a human (a confirmation that only you can give)'],
+  ['5', 'Device mismatch or dropped connection; reconnect and use --resume'],
+  ['6', 'Unsupported device (for example Fire TV)'],
+];
+const values = [
+  ['--uses', 'bluetooth, cast, location, voice, typing, camera, calls, sms, alarms, screensaver, accessibility, email, photos'],
+  ['--power', 'mains, battery, mixed'],
+  ['--symptoms', 'slow-menus, slow-apps, storage, battery, heat, video-stutter'],
+  ['--keep', 'package names of your main apps; they are protected and opened during health checks'],
+];
+---
+<Base title="CLI reference and exit codes | android-cleanup-agent" description="Every android-cleanup-agent command: doctor, devices, pair, connect, audit, plan, approvals, apply, clear-data, reboot, verify, restore, results, report, runs and catalog, plus exit codes.">
+  <h1>CLI reference</h1>
+  <p class="lead">Every command accepts <code>--run &lt;id&gt;</code> where it applies (default: the latest run) and most accept <code>--json</code> for machine-readable output.</p>
+  <table><tr><th>Command</th><th>What it does</th></tr>{rows.map(([c, d]) => <tr><td><code>{c}</code></td><td>{d}</td></tr>)}</table>
+
+  <h2>Plan answers</h2>
+  <p>Lists are comma-separated. The same keys (<code>uses</code>, <code>power</code>, <code>symptoms</code>, <code>keep</code>) can go in a YAML or JSON file passed with <code>--answers</code>.</p>
+  <table><tr><th>Option</th><th>Values</th></tr>{values.map(([o, v]) => <tr><td><code>{o}</code></td><td>{v}</td></tr>)}</table>
+
+  <h2>Exit codes</h2>
+  <table><tr><th>Code</th><th>Meaning</th></tr>{codes.map(([c, m]) => <tr><td><code>{c}</code></td><td>{m}</td></tr>)}</table>
+
+  <h2>Where runs are stored</h2>
+  <p>On macOS: <code>~/Library/Application Support/android-cleanup-agent/</code>. On Linux and WSL: <code>$XDG_STATE_HOME/android-cleanup-agent/</code> (default <code>~/.local/state/android-cleanup-agent/</code>). Each run keeps its audit, plan, approvals, change log, results, reports and <code>restore.sh</code>. Never in your working directory, never uploaded.</p>
+</Base>

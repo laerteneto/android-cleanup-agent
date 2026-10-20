@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+const faqs = [
+  ['Is it safe?', 'It is built to be reversible. Apps are removed only for the current user with their data kept, so restore brings them back. Apps holding a system role (home screen, keyboard, dialer, SMS, WebView, accessibility, device owner) and a never-touch list of core packages are skipped. Risky changes are applied one at a time with a health check and automatic rollback. Nothing changes without your approval, and apply is a dry run unless you pass --yes.'],
+  ['Does it need root?', 'No. It uses standard adb commands that work on any device with USB or Wireless debugging turned on. It never unlocks the bootloader, never uses fastboot and never modifies the system partition.'],
+  ['Will removed apps come back after a factory reset?', 'Yes. Removal is per user (pm uninstall -k --user), the app stays on the system partition. A factory reset brings every preinstalled app back. Run the tool again afterwards if you want.'],
+  ['Does it work on Amazon Fire TV?', 'No. Fire TV is not supported and the tool exits with code 6 rather than guess. It supports Android phones and tablets, Android TV, Google TV, and TVs that run tablet Android such as portable touchscreen TVs.'],
+  ['A Samsung app was not removed. Why?', 'Samsung Knox can refuse some removals on some devices. When the device refuses, the item is reported as failed and nothing else is affected. Knox packages themselves are on the never-touch list.'],
+  ['A system update brought some apps back. What now?', 'Over-the-air updates can reinstall or re-enable apps. Run verify to see which changes were reverted, then run the cleanup again if you want them removed.'],
+  ['Why does it only offer apps from the catalog?', 'Android devices ship hundreds of system packages and many are needed in ways that are not obvious from their names. Only packages in a curated, reviewed catalog are offered. Unknown system apps are listed in the audit so you can see them, but never offered. Apps you installed yourself and have not used for 90 days are offered too, unticked.'],
+  ['How do I add an app to the catalog?', 'Add an entry to the right file in catalog/packages/*.yaml (package id, title, category, risk, action, the features it relates to), run android-cleanup-agent catalog validate, and open a pull request on GitHub. Say which device you tested it on; untested entries are marked as community entries.'],
+  ['Can it delete my photos, messages or logins?', 'It does not delete user files. Removing an app keeps its data. Clearing caches keeps logins and settings. Only clear-data deletes an app\'s data and logins, for one app at a time, on request, after you type the package name twice, and it is never part of a plan.'],
+  ['Does it send my data anywhere?', 'No. No telemetry. Audits, plans and reports stay on your computer and device ids are hashed. The shareable summary holds categories and numbers only.'],
+  ['Do I need Claude Code?', 'No. The CLI works on its own. The Claude Code plugin adds a guided conversation: the interview, explanations and an independent risk judge.'],
+  ['Which computers does it run on?', 'macOS, Linux, and Windows via WSL, with Node.js 22+ and adb from Android platform-tools 30+.'],
+];
+const jsonLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) };
+---
+<Base title="FAQ: debloating Android without root | android-cleanup-agent" description="Is it safe, does it need root, do apps come back after a factory reset, Fire TV support, Samsung Knox refusals, system updates re-enabling apps, the catalog and how to add to it." jsonLd={jsonLd}>
+  <h1>FAQ</h1>
+  {faqs.map(([q, a]) => <><h2>{q}</h2><p>{a}</p></>)}
+</Base>

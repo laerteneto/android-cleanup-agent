@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f1712"/>
+  <rect x="0" y="0" width="24" height="630" fill="#3ddc84"/>
+  <g transform="translate(96 120)">
+    <rect width="120" height="120" rx="26" fill="#1a8f5a"/>
+    <path d="M30 71a30 30 0 0 1 60 0z" fill="#fff"/>
+    <circle cx="48" cy="58" r="3.8" fill="#1a8f5a"/><circle cx="72" cy="58" r="3.8" fill="#1a8f5a"/>
+    <path d="M41 36l6.5 9.5M79 36l-6.5 9.5" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+    <rect x="30" y="77" width="60" height="9" rx="4" fill="#fff"/>
+  </g>
+  <text x="96" y="340" font-family="Helvetica, Arial, sans-serif" font-size="68" font-weight="700" fill="#f2f7f4">android-cleanup-agent</text>
+  <text x="96" y="410" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#a9c2b4">Clean up and speed up an Android phone, tablet or TV</text>
+  <text x="96" y="456" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#a9c2b4">over adb, without root. Every change can be undone.</text>
+  <text x="96" y="540" font-family="Menlo, monospace" font-size="28" fill="#3ddc84">npm i -g android-cleanup-agent</text>
+</svg>

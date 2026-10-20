@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const base = import.meta.env.BASE_URL;
+const guides = (await getCollection('guides')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.data.title.localeCompare(b.data.title));
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'android-cleanup-agent guides',
+  itemListElement: guides.map((g, i) => ({ '@type': 'ListItem', position: i + 1, name: g.data.title, url: `https://willcoliveira.github.io${base}guides/${g.id}/` })),
+};
+---
+<Base title="Guides: debloat and speed up Android devices without root | android-cleanup-agent" description="Step-by-step guides for removing bloatware and speeding up Android TVs, Google TV, Samsung and Xiaomi phones and Thomson Go TVs over adb, without root, with every change reversible." jsonLd={jsonLd}>
+  <h1>Guides</h1>
+  <p class="lead">Device-specific walkthroughs. Each one says which catalog entries apply and whether they have been tested on a real device.</p>
+  <div class="grid">
+    {guides.map((g) => (
+      <div class="card">
+        <h3><a href={`${base}guides/${g.id}/`}>{g.data.title}</a></h3>
+        <p>{g.data.description}</p>
+        <p class="meta" style="margin-top:8px">{g.data.device}</p>
+      </div>
+    ))}
+  </div>
+</Base>

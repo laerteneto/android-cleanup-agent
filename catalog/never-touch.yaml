@@ -1,0 +1,74 @@
+# Packages that are never offered, whatever the catalog says. On top of this list,
+# the apps currently holding a system role (home screen, keyboard, dialer, SMS,
+# assistant, WebView, accessibility services, device owner) are protected at
+# runtime and re-checked before every change.
+packages:
+  # Core system
+  - { pattern: android, reason: 'the Android framework' }
+  - { pattern: com.android.systemui, reason: 'status bar, navigation and lock screen' }
+  - { pattern: 'com.android.systemui.*', reason: 'system UI overlays' }
+  - { pattern: com.android.settings, reason: 'the Settings app' }
+  - { pattern: com.android.shell, reason: 'adb itself runs as this package' }
+  - { pattern: 'com.google.android.gms*', reason: 'Google Play services; most apps depend on it' }
+  - { pattern: 'com.google.android.gsf*', reason: 'Google Services Framework' }
+  - { pattern: com.android.vending, reason: 'Play Store; needed to update and reinstall apps' }
+  - { pattern: com.google.android.webview, reason: 'renders web content inside apps' }
+  - { pattern: com.android.webview, reason: 'renders web content inside apps' }
+  - { pattern: com.google.android.trichromelibrary, reason: 'shared WebView/Chrome library' }
+  - { pattern: '*permissioncontroller*', reason: 'grants and revokes app permissions' }
+  - { pattern: '*packageinstaller*', reason: 'installs and restores apps' }
+  - { pattern: 'com.android.providers.*', reason: 'system data providers (media, contacts, settings, downloads, TV)' }
+  - { pattern: 'com.google.android.providers.*', reason: 'system data providers' }
+  - { pattern: '*networkstack*', reason: 'Wi-Fi and network connectivity' }
+  - { pattern: '*tethering*', reason: 'network connectivity' }
+  - { pattern: 'com.android.wifi.*', reason: 'Wi-Fi' }
+  - { pattern: 'com.google.android.wifi.*', reason: 'Wi-Fi' }
+  - { pattern: '*captiveportal*', reason: 'Wi-Fi sign-in pages' }
+  - { pattern: '*setupwizard*', reason: 'device setup; removing it can break the first-run flow after a reset' }
+  - { pattern: com.google.android.partnersetup, reason: 'device setup' }
+  - { pattern: 'com.google.android.ext.*', reason: 'core system services' }
+  - { pattern: com.google.android.modulemetadata, reason: 'system update modules' }
+  - { pattern: 'com.google.mainline.*', reason: 'system update modules' }
+  - { pattern: com.google.android.adservices.api, reason: 'system update module' }
+  - { pattern: com.google.android.configupdater, reason: 'security certificate updates' }
+  - { pattern: com.google.android.apps.restore, reason: 'backup and restore' }
+  - { pattern: com.android.keychain, reason: 'certificates and credentials' }
+  - { pattern: com.android.certinstaller, reason: 'certificates' }
+  - { pattern: com.android.inputdevices, reason: 'keyboards, remotes and game controllers' }
+  - { pattern: com.android.externalstorage, reason: 'storage access' }
+  - { pattern: com.android.mtp, reason: 'USB file transfer' }
+  - { pattern: '*documentsui*', reason: 'the system file picker other apps use' }
+  - { pattern: com.android.location.fused, reason: 'system location provider' }
+  - { pattern: com.android.bluetooth, reason: 'the Bluetooth stack (switch Bluetooth off instead)' }
+  - { pattern: com.android.nfc, reason: 'the NFC stack' }
+  - { pattern: com.android.se, reason: 'secure element (payments)' }
+  - { pattern: com.android.dynsystem, reason: 'system updates' }
+  - { pattern: com.google.android.packageinstaller, reason: 'installs and restores apps' }
+  - { pattern: com.android.intentresolver, reason: 'the "open with" chooser' }
+  - { pattern: com.android.credentialmanager, reason: 'passwords and passkeys' }
+  # Phone services
+  - { pattern: com.android.phone, reason: 'calls and mobile data' }
+  - { pattern: com.android.server.telecom, reason: 'calls' }
+  - { pattern: '*cellbroadcast*', reason: 'emergency alerts' }
+  - { pattern: com.android.emergency, reason: 'emergency information' }
+  - { pattern: com.android.stk, reason: 'SIM toolkit' }
+  - { pattern: com.android.mms.service, reason: 'MMS messages' }
+  # TV services
+  - { pattern: com.google.android.tvlauncher, reason: 'the Android TV home screen' }
+  - { pattern: com.google.android.apps.tv.launcherx, reason: 'the Google TV home screen' }
+  - { pattern: com.google.android.tv.remote.service, reason: 'remote control pairing' }
+  - { pattern: 'com.google.android.tungsten.*', reason: 'TV setup' }
+  - { pattern: com.android.tv.settings, reason: 'TV settings' }
+  # Updaters and OEM security
+  - { pattern: com.kgzn.ota, reason: 'system updates' }
+  - { pattern: com.sec.android.soagent, reason: 'system updates' }
+  - { pattern: com.wssyncmldm, reason: 'system updates' }
+  - { pattern: com.miui.updater, reason: 'system updates' }
+  - { pattern: 'com.samsung.android.knox*', reason: 'Samsung security platform' }
+  - { pattern: com.miui.securitycenter, reason: 'Xiaomi security and permissions; removing it can boot-loop MIUI' }
+  - { pattern: com.xiaomi.finddevice, reason: 'Find Device and anti-theft' }
+  # OEM system apps known to hold system duties
+  - { pattern: com.kgzn.dropdownmenu, reason: 'the Thomson/KTC quick menu, input switching and power menu' }
+  - { pattern: com.kgzn.oobe, reason: 'first-run setup' }
+  - { pattern: com.kgzn.factorytool, reason: 'factory service tool' }
+  - { pattern: 'com.rockchip.*', reason: 'chipset services' }
