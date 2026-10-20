@@ -315,6 +315,8 @@ export const Results = z
     rolledBack: z.number().int(),
     restoreScript: z.string().nullable(),
     notRestorable: z.array(z.string()),
+    /** Health checks opened the main apps just before "after" was measured, so RAM reads high for a few minutes. */
+    appsOpened: z.boolean().default(false),
   })
   .strict();
 export type Results = z.infer<typeof Results>;

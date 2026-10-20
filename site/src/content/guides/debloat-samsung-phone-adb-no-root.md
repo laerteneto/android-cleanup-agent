@@ -20,7 +20,7 @@ steps:
 
 <div class="note">
 
-**Catalog status:** the Samsung entries in this guide are **community-verified**. They come from community debloat lists and have not yet been tested on a real Samsung device by the author. The safeguards (role protection, health checks, automatic rollback, restore) apply to them like to every other entry. Reports from real devices are welcome on GitHub.
+**Catalog status:** tested on a Galaxy S22 (One UI, Android 16): Game Launcher, Game Booster, Sticker Center, Digital Wellbeing, Bixby Voice and voice wake-up, the three Facebook stubs, Gemini, Speech Services and the Google app were changed and restored. The other Samsung entries come from community debloat lists and are marked as such. The safeguards (role protection, health checks, automatic rollback, restore) apply to every entry. Reports from other models are welcome on GitHub.
 
 </div>
 
@@ -73,4 +73,4 @@ The answers are examples; use your own.
 
 ## Undo and system updates
 
-`android-cleanup-agent restore --yes` brings removed apps back with `cmd package install-existing`, re-enables disabled ones and resets changed settings. One UI updates can re-enable or reinstall some apps; run `android-cleanup-agent verify` after an update to see what changed back. A factory reset brings all preinstalled apps back.
+`android-cleanup-agent restore --yes` brings removed preinstalled apps back with `cmd package install-existing`, re-enables disabled ones and resets changed settings. Samsung phones also carry apps that the carrier or the Galaxy Store installed during setup (Samsung Notes, Health, Wallet, SmartThings and others often are). Those are not in the system image: removing one deletes it, and you get it back by reinstalling it from the Galaxy Store or Play Store, with its data intact. The tool tells you which ones those are before you approve anything. One UI updates can re-enable or reinstall some apps; run `android-cleanup-agent verify` after an update to see what changed back. A factory reset brings all preinstalled apps back.

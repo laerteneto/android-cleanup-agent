@@ -19,5 +19,7 @@ allowed-tools: Bash(android-cleanup-agent:*), AskUserQuestion
 4. Ask what to undo: everything, or specific items (match the user's words to the
    rows; ask when unsure). Then `restore --run <id> [--item <id>…]` (dry run) →
    show it → `restore --run <id> [--item …] --yes --json` (Claude Code asks to confirm).
-5. `verify --run <id>` again and report. Apps the user installed were uninstalled
-   and come back from the Play Store; cleared app data cannot come back. Say so.
+5. `verify --run <id>` again and report. Apps that are not in the system image (installed
+   by the user or the carrier) were deleted by Android and come back only by
+   reinstalling them from their store (the restore reason names it), with their data
+   intact; cleared app data cannot come back. Say so.

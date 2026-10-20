@@ -137,13 +137,17 @@ every change). Full list: [`catalog/never-touch.yaml`](catalog/never-touch.yaml)
 
 ## Undo
 
-- `restore` reverses the run's changes from its log: removed apps come back with
-  `cmd package install-existing` (their data was kept), disabled apps are
+- `restore` reverses the run's changes from its log: removed preinstalled apps come
+  back with `cmd package install-existing` (their data was kept), disabled apps are
   re-enabled, settings are put back (unset ones are deleted again).
 - Each run also writes a standalone `restore.sh` that finds the device by its
   fingerprint, for when the CLI is not around.
-- **Not restorable by the tool:** apps you installed yourself (reinstall from the
-  Play Store), cleared app data, and anything after a factory reset (a reset
+- **Not restorable by the tool:** apps that are not part of the system image, such
+  as apps you installed yourself or ones the carrier added during setup. Android
+  deletes their code when they are removed, even with `-k`, and keeps only their
+  data, so reinstall them from their store and they pick up where they were. A
+  catalog app that is a store-installed copy on your device is turned off instead
+  of removed for this reason. Also not restorable: cleared app data, and anything after a factory reset (a reset
   brings every preinstalled app back anyway).
 
 ## Security and privacy

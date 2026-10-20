@@ -1,6 +1,7 @@
 import { snapshot } from './audit.js';
 import type { Audit, ManifestEntry, Results } from './core/schemas.js';
 import { CONTRACT_VERSION } from './core/schemas.js';
+import { storeName } from './core/util.js';
 import type { Adb } from './platform/adb.js';
 import { pendingRestore, renderRestoreScript } from './restore.js';
 import type { RunStore } from './runs.js';
@@ -34,8 +35,9 @@ export async function computeResults(adb: Adb, store: RunStore, serial: string, 
     failed: entries.filter((e) => e.op === 'apply' && e.status === 'failed').length,
     rolledBack: entries.filter((e) => e.op === 'rollback' && e.status === 'ok').length,
     restoreScript: script,
+    appsOpened: entries.some((e) => e.op === 'health'),
     notRestorable: [
-      ...live.filter((e) => e.restore === 'store-reinstall').map((e) => `${e.target}: reinstall from the Play Store`),
+      ...live.filter((e) => e.restore === 'store-reinstall').map((e) => `${e.target}: reinstall from ${storeName(audit.packages.find((p) => p.pkg === e.target)?.installer)} (its data was kept)`),
       ...entries.filter((e) => e.op === 'clear-data' && e.status === 'ok').map((e) => `${e.target}: app data was cleared and cannot be brought back`),
     ],
   };

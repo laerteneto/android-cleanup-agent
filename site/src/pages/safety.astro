@@ -21,14 +21,15 @@ const base = import.meta.env.BASE_URL;
   </ul>
 
   <h2>Removal keeps your data</h2>
-  <p>Apps are removed with <code>pm uninstall -k --user &lt;current user&gt;</code>. That removes the app for the current user only; the APK stays on the system partition and <code>-k</code> keeps its data. Nothing is deleted from the system image, which is why no root is needed and why <code>restore</code> can bring the app back with <code>cmd package install-existing</code>. Some apps are disabled instead of removed; disabling is undone by re-enabling.</p>
+  <p>Apps are removed with <code>pm uninstall -k --user &lt;current user&gt;</code>. That removes the app for the current user only; for a preinstalled app the APK stays on the system partition and <code>-k</code> keeps its data. Nothing is deleted from the system image, which is why no root is needed and why <code>restore</code> can bring the app back with <code>cmd package install-existing</code>. Some apps are disabled instead of removed; disabling is undone by re-enabling.</p>
+  <p>Apps that are not in the system image (ones you or your carrier installed, or a catalog app whose copy came from a store) are different: Android deletes their code when they are removed and keeps only their data. Catalog apps like that are turned off instead of removed. Unused apps you installed are still offered for removal, one by one and unticked; to get one back, reinstall it from its store and it picks up where it was.</p>
 
   <h2>Re-checked right before each change</h2>
   <p>The plan is built from the audit. When you run <code>apply</code>, each item is checked again against the audited state: same device (by fingerprint), same package, still installed, still in the same state, not holding a live role. If anything differs, the item is skipped. <code>apply</code> is a dry run unless you pass <code>--yes</code>.</p>
 
   <h2>Health checks and automatic rollback</h2>
   <p>Higher-risk items, such as turning off the Google app, are applied alone, one at a time. After each one, a health check presses Home, opens your main apps (the ones you named in the interview) and reads the crash log. If the home screen or one of your apps fails, that change is rolled back automatically and the run tells you.</p>
-  <p>During a run the screen is kept awake so checks can run, and the original screen timeout setting is put back afterwards.</p>
+  <p>During a run the screen is kept awake so checks can run, and the original screen timeout setting is put back afterwards. A health check needs the screen unlocked: <code>apply</code> wakes the screen and waits up to 90 seconds for you to unlock it, and changes nothing if you don't. If the device locks itself mid-run, the risky items are skipped and <code>apply --yes --resume</code> does them later.</p>
 
   <h2>Playback guard</h2>
   <p>If something is playing, the health check waits instead of pressing Home, so it does not interrupt what you are watching. <code>reboot</code> is refused while something plays (unless you pass <code>--force-while-playing</code>).</p>
@@ -38,7 +39,7 @@ const base = import.meta.env.BASE_URL;
 
   <h2>Undo: restore, restore.sh and verify</h2>
   <ul>
-    <li><code>restore</code> undoes a run's changes newest first: removed apps come back with <code>cmd package install-existing</code>, disabled apps are re-enabled, and settings are put back to their recorded value. A setting that was unset before is deleted again, not set to a guessed default. It is a dry run unless you pass <code>--yes</code>; use <code>--item &lt;id&gt;</code> to undo one change.</li>
+    <li><code>restore</code> undoes a run's changes newest first: removed preinstalled apps come back with <code>cmd package install-existing</code>, disabled apps are re-enabled, and settings are put back to their recorded value. A setting that was unset before is deleted again, not set to a guessed default. It is a dry run unless you pass <code>--yes</code>; use <code>--item &lt;id&gt;</code> to undo one change.</li>
     <li>Every run also writes a <code>restore.sh</code> shell script. It finds the right device by fingerprint and undoes the run with plain adb, so you can recover even without the CLI installed.</li>
     <li><code>verify</code> checks that a run's changes are still in place. System updates (OTA) sometimes re-enable or reinstall apps; <code>verify</code> lists what was reverted.</li>
   </ul>
@@ -46,7 +47,7 @@ const base = import.meta.env.BASE_URL;
   <h2>What cannot be restored</h2>
   <table>
     <tr><th>Change</th><th>Why</th><th>How to get it back</th></tr>
-    <tr><td>Apps you installed yourself</td><td>They have no copy on the system partition, so there is nothing to <code>install-existing</code>.</td><td>Reinstall from the Play Store. This is why they are offered unticked and need their own explicit yes.</td></tr>
+    <tr><td>Apps you (or your carrier) installed</td><td>They have no copy on the system partition, and Android deletes their code when they are removed.</td><td>Reinstall from their store (Play Store, Galaxy Store…); their data was kept. This is why they are offered unticked and need their own explicit yes.</td></tr>
     <tr><td>Cleared app data (<code>clear-data</code>)</td><td>Data and logins are deleted.</td><td>Sign in again. Never part of a plan.</td></tr>
     <tr><td>Cleared caches</td><td>Caches are temporary files.</td><td>Apps rebuild them as you use them; logins and settings are kept.</td></tr>
     <tr><td>A factory-reset device</td><td>A reset brings every removed preinstalled app back by itself. The run's record on your computer no longer matches the device, so there is nothing for <code>restore</code> to do.</td><td>Nothing to restore; run the tool again if you want.</td></tr>

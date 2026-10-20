@@ -72,4 +72,4 @@ The answers are examples; use your own. If the device refuses a change, the item
 
 ## Undo and updates
 
-`android-cleanup-agent restore --yes` brings removed apps back with `cmd package install-existing`, newest first. MIUI and HyperOS updates can reinstall removed apps; run `android-cleanup-agent verify` after an update to see what came back. A factory reset brings all preinstalled apps back.
+`android-cleanup-agent restore --yes` brings removed preinstalled apps back with `cmd package install-existing`, newest first. Apps that came from GetApps or the Play Store are not in the system image; removing one deletes it and only a store reinstall brings it back (its data is kept). MIUI and HyperOS updates can reinstall removed apps; run `android-cleanup-agent verify` after an update to see what came back. A factory reset brings all preinstalled apps back.

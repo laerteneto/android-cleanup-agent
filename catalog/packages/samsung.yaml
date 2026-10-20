@@ -10,7 +10,8 @@ packages:
     risk: medium
     action: disable
     features: [voice]
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.samsung.android.bixby.wakeup
     title: Bixby voice wake-up
     vendor: samsung
@@ -18,7 +19,8 @@ packages:
     risk: medium
     action: disable
     features: [voice]
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.samsung.android.visionintelligence
     title: Bixby Vision
     vendor: samsung
@@ -41,14 +43,16 @@ packages:
     category: games
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.samsung.android.game.gametools
     title: Game Booster
     vendor: samsung
     category: games
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.samsung.android.aremoji
     title: AR Emoji
     vendor: samsung
@@ -78,11 +82,13 @@ packages:
     category: oem-apps
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.samsung.android.forest
     title: Samsung Digital Wellbeing
     vendor: samsung
     category: oem-apps
     risk: medium
     action: disable
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]

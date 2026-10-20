@@ -22,7 +22,7 @@ function pad(s: string, n: number): string {
 
 export function lastUsedText(i: Pick<Item, 'evidence'>): string {
   const e = i.evidence;
-  if (e.current !== undefined) return `now ${e.current}`;
+  if (e.current !== undefined) return e.current === 'null' ? 'now not set' : `now ${e.current}`;
   if (e.lastUsed === undefined || e.totalMs === undefined) return '';
   if (e.lastUsed === null) return 'never opened';
   return `last ${e.lastUsed.slice(0, 10)}, ${formatDuration(e.totalMs ?? 0)} total`;
@@ -44,9 +44,9 @@ export function renderAudit(a: Audit): string {
   lines.push('');
   lines.push(bold('Biggest memory users'));
   for (const m of a.topMemory.slice(0, 8)) lines.push(`  ${pad(formatKb(m.pssKb), 10)}${m.name}`);
-  if (a.wakers.length) {
+  if (a.wakers.some((w) => w.wakeups > 0)) {
     lines.push(bold('Wakes the device most often'));
-    for (const w of a.wakers.slice(0, 5)) lines.push(`  ${pad(String(w.wakeups), 6)}${w.pkg} ${dim(`(${w.alarms} alarms)`)}`);
+    for (const w of a.wakers.filter((w) => w.wakeups > 0).slice(0, 5)) lines.push(`  ${pad(String(w.wakeups), 6)}${w.pkg} ${dim(`(${w.alarms} alarms)`)}`);
   }
   for (const w of a.warnings) lines.push(yellow('! ' + w));
   return lines.join('\n');
@@ -80,6 +80,7 @@ export function renderResults(r: Results): string {
   const lines = [
     bold(`Results for ${r.run_id}`),
     `RAM in use:    ${mem(r.before)} → ${bold(mem(r.after))}`,
+    ...(r.appsOpened ? [dim('               (measured right after the checks opened your main apps; it drops back within a few minutes)')] : []),
     `Storage free:  ${free(r.before)} → ${bold(free(r.after))}`,
     `Changes:       ${r.removed} removed, ${r.disabled} turned off, ${r.settingsChanged} setting(s)${r.cacheFreedKb ? `, ${formatKb(r.cacheFreedKb)} of caches cleared` : ''}`,
   ];

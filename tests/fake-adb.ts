@@ -52,6 +52,14 @@ export interface Faults {
   /** The device refuses changes to these packages (like Samsung Knox). */
   refuse?: string[];
   playing?: string[];
+  /** The lock screen is up (a person has to unlock it). */
+  locked?: boolean;
+  /** The screen is off; KEYCODE_WAKEUP turns it on. */
+  asleep?: boolean;
+  /** After this many shell calls, a person unlocks the device. */
+  unlockAfter?: number;
+  /** After this many shell calls, the device locks itself (screen timeout). */
+  lockAfter?: number;
   /** Packages that crash right after any change. */
   crashAfterChange?: string[];
   /** The fingerprint the device reports changes (another device or a reset). */
@@ -63,6 +71,8 @@ interface PkgState extends FakePackage {
   installed: boolean;
   /** After `pm uninstall -k` (or for system apps) the package manager still knows it. */
   known: boolean;
+  /** Code deleted, record and data kept: what `pm uninstall -k` leaves of a non-system app (dumpsys shows `pkg=null`). */
+  codeGone: boolean;
   dataCleared: boolean;
 }
 
@@ -88,7 +98,7 @@ export class FakeAdb implements Adb {
     now = Date.parse('2026-10-19T18:00:00Z'),
   ) {
     this.clock = now;
-    this.pkgs = new Map(spec.packages.map((p) => [p.pkg, { ...p, enabled: p.enabled ?? true, installed: p.installed ?? true, known: true, dataCleared: false }]));
+    this.pkgs = new Map(spec.packages.map((p) => [p.pkg, { ...p, enabled: p.enabled ?? true, installed: p.installed ?? true, known: true, codeGone: false, dataCleared: false }]));
     this.settings = structuredClone(spec.settings);
     this.foregroundComponent = spec.home;
     this.foregroundPkg = spec.home.split('/')[0] as string;
@@ -128,6 +138,14 @@ export class FakeAdb implements Adb {
     this.shellCalls++;
     this.clock += 50;
     if (serial !== this.spec.serial || !this.connected) return fail(`adb: device '${serial}' not found`);
+    if (this.faults.unlockAfter !== undefined && this.shellCalls > this.faults.unlockAfter) {
+      this.faults.locked = false;
+      delete this.faults.unlockAfter;
+    }
+    if (this.faults.lockAfter !== undefined && this.shellCalls > this.faults.lockAfter) {
+      this.faults.locked = true;
+      delete this.faults.lockAfter;
+    }
     if (this.faults.dropAfter !== undefined && this.shellCalls > this.faults.dropAfter) {
       this.connected = false;
       return fail('error: device offline');
@@ -227,9 +245,16 @@ export class FakeAdb implements Adb {
       for (const p of this.faults.playing ?? []) lines.push(`  demo ${p}/demo (userId=0)`, `    package=${p}`, '    active=true', '    state=PlaybackState {state=3, position=1000}');
       return ok(lines.join('\n') + '\n');
     }
-    if (cmd === 'dumpsys activity activities') return ok(`ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)\n  topResumedActivity=ActivityRecord{5bc917d u0 ${this.foregroundComponent} t274}\n`);
+    if (cmd === 'dumpsys activity activities') return ok(`ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)\n  topResumedActivity=ActivityRecord{5bc917d u0 ${this.foregroundComponent} t274}\n  KeyguardController:\n    mKeyguardShowing=${Boolean(this.faults.locked)}\n`);
+    if (cmd === 'dumpsys power') return ok(`POWER MANAGER (dumpsys power)\n  mWakefulness=${this.faults.asleep ? 'Asleep' : 'Awake'}\n`);
     if (cmd === 'logcat -b crash -d -v epoch') return ok(this.crashes.map((c) => `  ${c.at}.000  1234  1234 E AndroidRuntime: Process: ${c.proc}, PID: 1234`).join('\n') + '\n');
     if (a0 === 'input' && a1 === 'keyevent') {
+      if (a2 === 'KEYCODE_WAKEUP') {
+        this.faults.asleep = false;
+        return ok();
+      }
+      // A locked or sleeping device stays on the lock screen whatever is pressed.
+      if (this.faults.locked || this.faults.asleep) return ok();
       if (a2 === 'KEYCODE_HOME') {
         const broken = this.faults.homeBreaksWithout && !this.isLive(this.faults.homeBreaksWithout);
         this.foregroundComponent = broken ? 'com.android.settings/.FallbackHome' : this.spec.home;
@@ -250,7 +275,7 @@ export class FakeAdb implements Adb {
     if (cmd.startsWith('cmd package install-existing')) {
       if (this.spec.capabilities?.installExisting === false) return fail('Unknown command: install-existing');
       const p = this.pkg(lastPkg());
-      if (!p || !p.known) return ok(`Package ${lastPkg()} doesn't exist\n`);
+      if (!p || !p.known || p.codeGone) return fail(`android.content.pm.PackageManager$NameNotFoundException: Package ${lastPkg()} doesn't exist`);
       p.installed = true;
       p.enabled = true;
       return ok(`Package ${p.pkg} installed for user: ${user()}\n`);
@@ -279,7 +304,12 @@ export class FakeAdb implements Adb {
     const before = this.epoch();
     if (op === 'uninstall') {
       p.installed = false;
-      if (!p.system && !keep) p.known = false;
+      // Real devices (checked on Android 16): a non-system app removed for its only
+      // user loses its code even with -k; only the record and data stay.
+      if (!p.system) {
+        if (keep) p.codeGone = true;
+        else p.known = false;
+      }
     } else if (op === 'disable-user') {
       p.enabled = false;
     } else if (op === 'enable') {
@@ -307,7 +337,7 @@ export class FakeAdb implements Adb {
   private dumpsysPackages(list: PkgState[]): string {
     const lines = ['Packages:'];
     for (const p of list) {
-      lines.push(`  Package [${p.pkg}] (a1b2c3):`, `    versionCode=${p.versionCode ?? 1} minSdk=26 targetSdk=34`, `    pkgFlags=[ ${p.system ? 'SYSTEM ' : ''}HAS_CODE ALLOW_CLEAR_USER_DATA ]`, `    lastUpdateTime=${p.lastUpdateTime ?? '2026-01-01 10:00:00'}`);
+      lines.push(`  Package [${p.pkg}] (a1b2c3):`, `    versionCode=${p.versionCode ?? 1} minSdk=26 targetSdk=34`, `    pkg=${p.codeGone ? 'null' : `Package{a1b2c3 ${p.pkg}}`}`, `    pkgFlags=[ ${p.system ? 'SYSTEM ' : ''}HAS_CODE ALLOW_CLEAR_USER_DATA ]`, `    lastUpdateTime=${p.lastUpdateTime ?? '2026-01-01 10:00:00'}`);
       lines.push(`    User 0: ceDataInode=1 installed=${p.installed} hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=${p.enabled ? 0 : 3} instant=false virtual=false`);
     }
     lines.push('', 'Hidden system packages:', '  Package [com.google.android.youtube] (ffff):', '    versionCode=1');

@@ -54,3 +54,15 @@ export function displayText(s: string, max = 120): string {
 export function daysBetween(fromIso: string, to: Date): number {
   return (to.getTime() - Date.parse(fromIso)) / 86_400_000;
 }
+
+const STORES: Record<string, string> = {
+  'com.android.vending': 'the Play Store',
+  'com.sec.android.app.samsungapps': 'the Galaxy Store',
+  'com.xiaomi.mipicks': 'GetApps',
+  'com.huawei.appmarket': 'AppGallery',
+};
+
+/** Where an app came from, for "reinstall it from …". Carrier and unknown installers fall back to the Play Store. */
+export function storeName(installer: string | null | undefined): string {
+  return (installer && STORES[installer]) ?? 'the Play Store';
+}

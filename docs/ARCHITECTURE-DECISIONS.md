@@ -23,6 +23,19 @@ never stored.
 `pm uninstall --user N` without `-k` deletes the app's data. The tool always uses
 `-k`, so `cmd package install-existing` brings an app back as it was.
 
+That only holds for apps in the system image. For an app that is not (installed
+from a store, or added by the carrier during setup), removing it for its only user
+deletes its code even with `-k`; Android keeps the package record (`pkg=null` in
+`dumpsys package`) and the data, and `install-existing` fails with "doesn't
+exist". Found on a Galaxy S22 with Android 16. So:
+- `readPackage` treats `pkg=null` as not restorable, and `apply` records such a
+  removal as `store-reinstall`, never `install-existing`.
+- A catalog entry that is a store-installed copy on the device (`system: false`)
+  is offered as a disable instead of a removal.
+- Unused user-installed apps are still offered as removals (that is the point:
+  freeing their space), unticked, one by one, with "reinstall from <store>" as
+  their undo.
+
 ## ADR-005: Only offer what this device can undo
 Capabilities are probed during the audit (`install-existing`, `cmd location`,
 `cmd bluetooth_manager`, `svc bluetooth`). A removal becomes a disable when the

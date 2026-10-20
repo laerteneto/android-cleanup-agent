@@ -5,6 +5,8 @@
  * items) nothing playing → change → read the state back → manifest entry (fsync)
  * → (risky items) health check, rolled back on failure. Any mismatch is skipped
  * and reported. A dropped connection stops the run; `--resume` continues it.
+ * Risky items need the screen on and unlocked (the health check presses Home),
+ * so a locked device stops the run before anything changes.
  */
 import { selectApproved, verifyApprovals } from './approvals.js';
 import type { Catalog } from './catalog/loader.js';
@@ -13,16 +15,22 @@ import type { Approvals, Audit, Item, ManifestEntry, Plan, Results, Roles } from
 import { deviceFingerprint } from './connect.js';
 import { readRoles } from './device.js';
 import { dismissKnownPopup, healthCheck, pressHome } from './health.js';
-import { deviceEpoch, disablePackage, enablePackage, installExisting, playing, readPackage, readSetting, settleSetting, trimCaches, uninstallForUser, writeSetting } from './ops.js';
+import { deviceEpoch, disablePackage, enablePackage, installExisting, playing, readPackage, screenBlocker, readSetting, settleSetting, trimCaches, uninstallForUser, writeSetting } from './ops.js';
 import { type Adb, DeviceDroppedError } from './platform/adb.js';
 import { computeResults } from './results.js';
 import type { RunStore } from './runs.js';
 import { protectedReason } from './safety/never-touch.js';
 
 export const AWAKE_MS = 600_000;
+export const UNLOCK_WAIT_MS = 90_000;
 export const DROPPED_REASON = 'device dropped';
+export const PLAYING_REASON = 'something is playing on the device right now; run apply --resume when it is free';
+export const LOCKED_REASON = 'the screen is locked; unlock the device and run apply --resume';
+/** Skips that `--resume` tries again. */
+const RESUMABLE = new Set([DROPPED_REASON, PLAYING_REASON, LOCKED_REASON]);
 
 export class FingerprintMismatchError extends Error {}
+export class DeviceLockedError extends Error {}
 
 export interface ApplyContext {
   adb: Adb;
@@ -36,11 +44,13 @@ export interface ApplyContext {
   overlay: UserOverlay;
   resume?: boolean;
   onEntry?: (e: ManifestEntry, item: Item | null) => void;
+  /** Called once when the run waits for a person to unlock the device. */
+  onWaiting?: (message: string) => void;
 }
 
 /** Items that already have a final outcome in the manifest. */
 export function finishedItems(entries: ManifestEntry[]): Set<string> {
-  return new Set(entries.filter((e) => e.itemId && (e.op === 'apply' || (e.op === 'skip' && e.reason !== DROPPED_REASON))).map((e) => e.itemId as string));
+  return new Set(entries.filter((e) => e.itemId && (e.op === 'apply' || (e.op === 'skip' && !RESUMABLE.has(e.reason ?? '')))).map((e) => e.itemId as string));
 }
 
 export async function assertSameDevice(adb: Adb, serial: string, fingerprint: string): Promise<void> {
@@ -63,6 +73,19 @@ export async function applyPlan(ctx: ApplyContext): Promise<Results> {
     store.appendManifest(plan.run_id, full);
     ctx.onEntry?.(full, item);
   };
+
+  if (selected.some((i) => i.homeCheck)) {
+    let blocked = await screenBlocker(adb, serial);
+    if (blocked) {
+      ctx.onWaiting?.(`${blocked}: unlock the device now (waiting up to ${UNLOCK_WAIT_MS / 1000} s)…`);
+      const until = adb.now().getTime() + UNLOCK_WAIT_MS;
+      while (blocked && adb.now().getTime() < until) {
+        await adb.sleep(1500);
+        blocked = await screenBlocker(adb, serial);
+      }
+    }
+    if (blocked) throw new DeviceLockedError(`${blocked}. Some changes are checked by opening the home screen and your main apps, so unlock the device, keep it unlocked, and run apply again. Nothing was changed.`);
+  }
 
   const release = store.acquireLock();
   let awake: string | null = null;
@@ -141,7 +164,8 @@ async function applyItem(ctx: ApplyContext, item: Item, roles: Roles, record: Re
   if (why) return void skip(`protected: ${why}`);
   if (item.homeCheck) {
     const busy = await playing(adb, serial);
-    if (busy.length) return void skip('something is playing on the device right now; run apply --resume when it is free');
+    if (busy.length) return void skip(PLAYING_REASON);
+    if (await screenBlocker(adb, serial)) return void skip(LOCKED_REASON);
   }
 
   const sinceSec = await deviceEpoch(adb, serial);

@@ -23,21 +23,24 @@ packages:
     category: social-apps
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.facebook.services
     title: Facebook Services
     vendor: meta
     category: social-apps
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.facebook.system
     title: Facebook App Installer
     vendor: meta
     category: social-apps
     risk: low
     action: uninstall-user
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]
   - id: com.microsoft.skydrive
     title: OneDrive (preinstalled)
     vendor: microsoft

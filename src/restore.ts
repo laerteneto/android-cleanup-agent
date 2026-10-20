@@ -3,6 +3,7 @@
  * the manifest (what really happened), never from the plan (what was intended).
  */
 import type { Audit, ManifestEntry, SettingNs, SettingVia } from './core/schemas.js';
+import { storeName } from './core/util.js';
 import { enablePackage, installExisting, readPackage, readSetting, settleSetting, writeSetting } from './ops.js';
 import type { Adb } from './platform/adb.js';
 import { PKG, SETTING_KEY, SETTING_VALUE } from './platform/argv.js';
@@ -71,7 +72,7 @@ export async function executeRestore(adb: Adb, store: RunStore, serial: string, 
         after = live.state;
         if (live.state !== 'enabled') {
           status = 'failed';
-          reason = out.slice(0, 200) || `still ${live.state}`;
+          reason = live.state === 'absent' && !live.restorable ? `the device no longer has this app's code; reinstall it from ${storeName(audit.packages.find((p) => p.pkg === s.target)?.installer)} (its data was kept)` : out.slice(0, 200) || `still ${live.state}`;
         }
       }
       const entry: ManifestEntry = {

@@ -8,7 +8,7 @@ import { fileMatches } from './catalog/loader.js';
 import type { SettingEntry, UserOverlay } from './catalog/schema.js';
 import type { Answers, Audit, AuditPackage, Item, Plan, Risk, SettingVia } from './core/schemas.js';
 import { CONTRACT_VERSION } from './core/schemas.js';
-import { formatDuration, itemId } from './core/util.js';
+import { formatDuration, itemId, storeName } from './core/util.js';
 import { protectedReason } from './safety/never-touch.js';
 
 /** A catalog app used within this window is not offered: the user clearly uses it. */
@@ -17,6 +17,8 @@ export const RECENT_USE_DAYS = 60;
 export const USER_APP_IDLE_DAYS = 90;
 const MIN_REAL_USE_MS = 60_000;
 const MIN_CACHE_BYTES = 50_000_000;
+/** Installers that add carrier apps during setup (seen on Samsung). */
+const CARRIER_INSTALLERS = new Set(['com.samsung.android.app.omcagent']);
 
 const ORDER: Record<Item['category'], number> = {
   performance: 0,
@@ -145,9 +147,15 @@ export function buildPlan(input: PlanInput): Plan {
     if (action === 'uninstall-user' && !device.capabilities.installExisting) {
       action = 'disable';
       notes.push('Turned off rather than removed: this device cannot reinstall removed system apps on its own.');
+    } else if (action === 'uninstall-user' && !p.system) {
+      // A store-installed copy: removing it deletes the app, and only the store could bring it back.
+      action = 'disable';
+      notes.push('Turned off rather than removed: this copy was installed from an app store, so removing it would delete the app.');
     }
     let risk = entry.riskByClass[device.deviceClass] ?? entry.risk;
-    if (entry.confidence === 'community') risk = atLeast(risk, 'medium');
+    // "verified" counts only on the kind of device it was proven on.
+    const verifiedHere = entry.confidence === 'verified' && (entry.verifiedOn.length === 0 || entry.verifiedOn.includes(device.deviceClass));
+    if (!verifiedHere) risk = atLeast(risk, 'medium');
     items.push({
       id: itemId(fp, 'package', entry.id, audit.run_id),
       catalogId: entry.id,
@@ -160,7 +168,7 @@ export function buildPlan(input: PlanInput): Plan {
       evidence: usageEvidence(p),
       restore: action === 'disable' ? 'enable' : 'install-existing',
       requiresExplicit: risk === 'high',
-      recommended: risk === 'low' && entry.confidence === 'verified',
+      recommended: risk === 'low' && verifiedHere,
       homeCheck: entry.homeCheck,
       notes,
     });
@@ -191,7 +199,7 @@ export function buildPlan(input: PlanInput): Plan {
         requiresExplicit: true,
         recommended: false,
         homeCheck: false,
-        notes: [p.usage.lastUsed ? `Not opened for ${Math.round(idle)} days.` : 'Never opened since usage tracking began.', 'Reinstall from the Play Store if you want it back.'],
+        notes: [p.usage.lastUsed ? `Not opened for ${Math.round(idle)} days.` : 'Never opened since usage tracking began.', ...(CARRIER_INSTALLERS.has(p.installer ?? '') ? ['Put on the device by the carrier during setup.'] : []), `Removing deletes the app; the device keeps its data. To get it back, reinstall it from ${storeName(p.installer)} and it picks up where it was.`],
       });
     }
   }

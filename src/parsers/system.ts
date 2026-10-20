@@ -72,3 +72,15 @@ export function parseForegroundComponent(text: string): string | null {
   const m = text.match(/(?:topResumedActivity|mResumedActivity|ResumedActivity)[=:] ?ActivityRecord\{\S+ u\d+ ([A-Za-z0-9_.]+\/[A-Za-z0-9_.$]+)/);
   return m ? (m[1] as string) : null;
 }
+
+/** `dumpsys power` → Awake, Asleep, Dozing or Dreaming. */
+export function parseWakefulness(text: string): string | null {
+  const m = text.match(/mWakefulness=([A-Za-z]+)/);
+  return m ? (m[1] as string) : null;
+}
+
+/** `dumpsys activity activities` → whether the lock screen is up (KeyguardController, Android 8.1+). */
+export function parseKeyguardShowing(text: string): boolean | null {
+  const m = text.match(/mKeyguardShowing=(true|false)/);
+  return m ? m[1] === 'true' : null;
+}

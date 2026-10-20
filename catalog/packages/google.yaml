@@ -76,7 +76,7 @@ packages:
     action: uninstall-user
     features: [voice]
     confidence: verified
-    verifiedOn: [tablet-tv]
+    verifiedOn: [tablet-tv, phone]
   - id: com.google.android.apps.nbu.files
     title: Files by Google
     vendor: google
@@ -183,7 +183,7 @@ packages:
     features: [voice]
     homeCheck: true
     confidence: verified
-    verifiedOn: [tablet-tv]
+    verifiedOn: [tablet-tv, phone]
     notes: ['Often the largest background memory user. Some home screens embed its search bar, so it is turned off alone and the home screen is checked straight away.']
   - id: com.google.android.tts
     title: Speech Services by Google (text-to-speech)
@@ -193,7 +193,7 @@ packages:
     action: disable
     features: [voice, accessibility]
     confidence: verified
-    verifiedOn: [tablet-tv]
+    verifiedOn: [tablet-tv, phone]
     notes: ['Reads text aloud for voice answers and screen readers.']
   - id: com.android.contacts
     title: Contacts (AOSP)
@@ -238,4 +238,5 @@ packages:
     category: google-apps
     risk: low
     action: disable
-    confidence: community
+    confidence: verified
+    verifiedOn: [phone]

@@ -18,6 +18,17 @@ All notable changes to this project are documented here. The format follows
   checks with automatic rollback, keep-awake during runs, resume after a drop.
 - Restore from the run log, standalone `restore.sh`, `verify` for drift.
 - Reports: terminal, Markdown, offline HTML, redacted shareable artifact.
+
+### Fixed (from the first phone test: Galaxy S22, Android 16)
+- A removed app that is not in the system image was recorded as restorable with
+  `install-existing`; Android deletes its code. It is now a store reinstall, and
+  store-installed copies of catalog apps are turned off instead of removed.
+- Health checks on a locked phone failed and rolled back a good change. `apply`
+  now wakes the screen, waits for an unlock, and skips (resumably) if the device
+  locks mid-run.
+- `apply --resume` did not retry items skipped because something was playing.
+- Running `plan` with no answers replaced the saved plan; it now shows it.
+- "Verified" catalog entries count only on the kind of device they were tested on.
 - Claude Code plugin: `cleanup`, `audit`, `restore` skills; risk judge and report
   agents; bash and write guard hooks.
 

@@ -200,6 +200,63 @@ describe('apply → results → restore round trip', () => {
     expect(adb.isLive('com.amazon.avod.thirdpartyclient')).toBe(false); // non-disruptive items still went ahead
   });
 
+  it('refuses to start risky changes on a locked device, and wakes a sleeping one', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec, { locked: true, asleep: true });
+    const gapp = byPkg(plan, 'com.google.android.googlequicksearchbox')!;
+    await expect(applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: approveAll(plan, planSha, { [gapp.id]: true }), catalog, overlay })).rejects.toThrow(/locked.*Nothing was changed/);
+    expect(adb.log.some((c) => c[0] === 'input' && c[2] === 'KEYCODE_WAKEUP')).toBe(true);
+    expect(store.readManifest(plan.run_id)).toEqual([]);
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(true);
+    // Unlocked: the same approvals go through, including the health check.
+    adb.faults.locked = false;
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: approveAll(plan, planSha, { [gapp.id]: true }), catalog, overlay });
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(false);
+    expect(store.readManifest(plan.run_id).find((e) => e.op === 'health')?.status).toBe('ok');
+  });
+
+  it('waits for the person to unlock the device, then goes ahead', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec, { locked: true });
+    const gapp = byPkg(plan, 'com.google.android.googlequicksearchbox')!;
+    adb.faults.unlockAfter = adb.shellCalls + 15;
+    const waiting: string[] = [];
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: approveAll(plan, planSha, { [gapp.id]: true }), catalog, overlay, onWaiting: (m) => waiting.push(m) });
+    expect(waiting).toHaveLength(1);
+    expect(waiting[0]).toMatch(/unlock the device now/);
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(false);
+    expect(store.readManifest(plan.run_id).find((e) => e.op === 'health')?.status).toBe('ok');
+  });
+
+  it('skips a risky change when the device locks mid-run, and --resume does it after unlocking', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec);
+    const gapp = byPkg(plan, 'com.google.android.googlequicksearchbox')!;
+    const approvals = approveAll(plan, planSha, { [gapp.id]: true });
+    adb.faults.lockAfter = adb.shellCalls + 12;
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals, catalog, overlay });
+    const first = store.readManifest(plan.run_id);
+    expect(first.find((e) => e.itemId === gapp.id)?.reason).toMatch(/locked/);
+    expect(first.some((e) => e.op === 'rollback')).toBe(false);
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(true);
+    adb.faults.locked = false;
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals, catalog, overlay, resume: true });
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(false);
+    expect(store.readManifest(plan.run_id).filter((e) => e.op === 'health').map((e) => e.status)).toEqual(['ok']);
+  });
+
+  it('--resume retries a change skipped because something was playing', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec, { playing: ['com.google.android.youtube'] });
+    const gapp = byPkg(plan, 'com.google.android.googlequicksearchbox')!;
+    const approvals = approveAll(plan, planSha, { [gapp.id]: true });
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals, catalog, overlay });
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(true);
+    adb.faults.playing = [];
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals, catalog, overlay, resume: true });
+    expect(adb.isLive('com.google.android.googlequicksearchbox')).toBe(false);
+  });
+
   it('dismisses the location-off popup it caused', async () => {
     const spec = tabletTv();
     const { adb, store, audit, plan, planSha } = await setup(spec, { popupOnLocationOff: true });
@@ -309,7 +366,17 @@ describe('other device classes', () => {
     expect(byPkg(plan, 'com.google.android.deskclock')).toBeUndefined(); // not offered on phones
     expect(byPkg(plan, 'com.whatsapp')).toBeUndefined();
     expect(byKey(plan, 'global.bluetooth_on')).toBeUndefined();
-    expect(plan.items.find((i) => i.pkg === 'com.samsung.android.bixby.agent')?.recommended).toBe(false); // community entry
+    expect(plan.items.find((i) => i.pkg === 'com.samsung.android.bixby.agent')?.recommended).toBe(false); // medium risk
+  });
+
+  it('counts a verified entry only on the kind of device it was proven on', async () => {
+    const { plan, audit, store } = await setup(phone(), {}, { uses: ['calls', 'sms'], power: 'battery', symptoms: [], keep: [] });
+    const target = plan.items.find((i) => i.pkg && i.catalogId === i.pkg)!.pkg!;
+    const withEntry = (verifiedOn: string[]) => ({ ...catalog, packages: catalog.packages.map((p) => (p.id === target ? { ...p, risk: 'low' as const, riskByClass: {}, confidence: 'verified' as const, verifiedOn } : p)) });
+    const { sha } = store.loadAudit(audit.run_id);
+    const on = (verifiedOn: string[]) => buildPlan({ audit, auditSha: sha, catalog: withEntry(verifiedOn), overlay, answers: plan.answers, now: new Date(audit.created_at) }).items.find((i) => i.catalogId === target)!;
+    expect(on(['tablet-tv'])).toMatchObject({ risk: 'medium', recommended: false });
+    expect(on(['phone'])).toMatchObject({ risk: 'low', recommended: true });
   });
 
   it('Google TV: never offers switching Bluetooth off (the remote needs it)', async () => {
@@ -332,6 +399,34 @@ describe('other device classes', () => {
     const prime = byPkg(plan, 'com.amazon.avod.thirdpartyclient')!;
     expect(prime.action.type).toBe('disable');
     expect(prime.restore).toBe('enable');
+  });
+
+  it('turns off, rather than removes, a catalog app that was installed from a store', async () => {
+    const spec = tabletTv();
+    const prime = spec.packages.find((p) => p.pkg === 'com.amazon.avod.thirdpartyclient')!;
+    prime.system = false;
+    prime.installer = 'com.android.vending';
+    const { plan } = await setup(spec);
+    const item = byPkg(plan, 'com.amazon.avod.thirdpartyclient')!;
+    expect(item.action.type).toBe('disable');
+    expect(item.restore).toBe('enable');
+    expect(item.notes.join(' ')).toMatch(/app store/);
+  });
+
+  it('records a removed user app as a store reinstall (Android deletes its code even with -k)', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec);
+    const game = byPkg(plan, 'com.example.oldgame')!;
+    const results = await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: { ...approveAll(plan, planSha), categories: {}, items: { [game.id]: true } }, catalog, overlay });
+    expect(adb.pkg('com.example.oldgame')?.codeGone).toBe(true);
+    const entry = store.readManifest(plan.run_id).find((e) => e.op === 'apply' && e.itemId === game.id)!;
+    expect(entry.restore).toBe('store-reinstall');
+    expect(results.notRestorable.join('\n')).toMatch(/com\.example\.oldgame: reinstall from the Play Store \(its data was kept\)/);
+    expect(pendingRestore(store.readManifest(plan.run_id)).some((st) => st.target === 'com.example.oldgame')).toBe(false);
+    expect(results.restoreScript).toBeNull(); // nothing the device itself can undo
+    // A run recorded by an older version claimed install-existing; restore explains what to do instead.
+    const [r] = await executeRestore(adb, store, spec.serial, audit, [{ itemId: game.id, target: 'com.example.oldgame', kind: 'install-existing' }]);
+    expect(r).toMatchObject({ status: 'failed', reason: expect.stringMatching(/reinstall it from the Play Store \(its data was kept\)/) });
   });
 
   it('falls back to svc for Bluetooth and drops it when neither works', async () => {

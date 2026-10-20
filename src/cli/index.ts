@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { parse } from 'yaml';
-import { applyPlan, FingerprintMismatchError } from '../apply.js';
+import { applyPlan, DeviceLockedError, FingerprintMismatchError } from '../apply.js';
 import { isApproved, verifyApprovals } from '../approvals.js';
 import { runAudit } from '../audit.js';
 import { catalogDir, loadCatalog, loadUserOverlay, userOverlayPath } from '../catalog/loader.js';
@@ -180,6 +180,14 @@ program
   .action(async (o: { run?: string; answers?: string; uses?: string; power?: string; symptoms?: string; keep?: string; summary?: boolean; json?: boolean }) => {
     const runId = resolveRun(o.run);
     const s = store();
+    // No answers given: show the saved plan instead of replacing it (approvals are pinned to it).
+    const given = [o.answers, o.uses, o.power, o.symptoms, o.keep].some((x) => x !== undefined);
+    if (!given && s.hasPlan(runId)) {
+      const { plan } = s.loadPlan(runId);
+      if (o.summary) print(true, planSummary(plan), () => '');
+      else print(Boolean(o.json), plan, () => renderPlan(plan));
+      return;
+    }
     const { audit, sha } = s.loadAudit(runId);
     const fromFile = o.answers ? (parse(readFileSync(o.answers, 'utf8')) as unknown) : {};
     const answers = Answers.parse({
@@ -307,6 +315,7 @@ program
       catalog: loadCatalog(),
       overlay: loadUserOverlay(configDir()),
       resume: Boolean(o.resume),
+      onWaiting: (m) => process.stderr.write(`${yellow(m)}\n`),
       onEntry: (e, item) => {
         if (o.json) return;
         const mark = e.status === 'ok' ? green('ok') : e.status === 'skipped' ? yellow('skip') : red('fail');
@@ -486,7 +495,7 @@ catalog
   });
 
 program.parseAsync(process.argv).catch((e: unknown) => {
-  const code = e instanceof ExitError ? e.code : e instanceof NoDeviceError ? 3 : e instanceof UnsupportedDeviceError ? 6 : e instanceof DeviceDroppedError || e instanceof FingerprintMismatchError ? 5 : e instanceof BusyError ? 4 : 1;
+  const code = e instanceof ExitError ? e.code : e instanceof NoDeviceError ? 3 : e instanceof UnsupportedDeviceError ? 6 : e instanceof DeviceDroppedError || e instanceof FingerprintMismatchError ? 5 : e instanceof BusyError || e instanceof DeviceLockedError ? 4 : 1;
   process.stderr.write(red('android-cleanup-agent: ') + (e instanceof Error ? e.message : String(e)) + '\n');
   process.exit(code);
 });

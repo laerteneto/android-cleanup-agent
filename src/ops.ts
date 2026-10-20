@@ -8,7 +8,7 @@ import { type Adb, out, sh } from './platform/adb.js';
 import { assertPkg, assertSettingKey, assertSettingValue, userArg } from './platform/argv.js';
 import { isEnabledState, parseDumpsysPackages } from './parsers/packages.js';
 import { parseDf } from './parsers/props.js';
-import { parseForeground, parseForegroundComponent, parsePlaying } from './parsers/system.js';
+import { parseForeground, parseForegroundComponent, parseKeyguardShowing, parsePlaying, parseWakefulness } from './parsers/system.js';
 
 export type PackageState = 'enabled' | 'disabled' | 'absent' | 'unknown';
 
@@ -16,7 +16,7 @@ export interface LivePackage {
   state: PackageState;
   versionCode: number | null;
   lastUpdateTime: string | null;
-  /** Still known to the package manager for this user (removed with data kept, or a system app). */
+  /** `install-existing` can bring it back: the package manager still has its code (a system app, or one installed for another user). */
   restorable: boolean;
 }
 
@@ -25,12 +25,13 @@ export async function readPackage(adb: Adb, serial: string, user: number, pkg: s
   const info = parseDumpsysPackages(await out(adb, serial, ['dumpsys', 'package', pkg])).get(pkg);
   if (!info) return { state: 'absent', versionCode: null, lastUpdateTime: null, restorable: false };
   const u = info.users.get(user);
-  if (!u) return { state: 'unknown', versionCode: info.versionCode, lastUpdateTime: info.lastUpdateTime, restorable: true };
+  const restorable = !info.codeGone;
+  if (!u) return { state: 'unknown', versionCode: info.versionCode, lastUpdateTime: info.lastUpdateTime, restorable };
   return {
     state: !u.installed ? 'absent' : isEnabledState(u.enabledState) ? 'enabled' : 'disabled',
     versionCode: info.versionCode,
     lastUpdateTime: info.lastUpdateTime,
-    restorable: true,
+    restorable,
   };
 }
 
@@ -108,6 +109,29 @@ export async function playing(adb: Adb, serial: string): Promise<string[]> {
 export async function foreground(adb: Adb, serial: string): Promise<{ pkg: string | null; component: string | null }> {
   const text = await out(adb, serial, ['dumpsys', 'activity', 'activities']);
   return { pkg: parseForeground(text), component: parseForegroundComponent(text) };
+}
+
+/** Whether the screen is on and unlocked. `null` when this Android version does not say. */
+export async function screenState(adb: Adb, serial: string): Promise<{ awake: boolean | null; locked: boolean | null }> {
+  const wake = parseWakefulness(await out(adb, serial, ['dumpsys', 'power']));
+  const locked = parseKeyguardShowing(await out(adb, serial, ['dumpsys', 'activity', 'activities']));
+  return { awake: wake === null ? null : wake === 'Awake', locked };
+}
+
+/**
+ * Wakes the screen and reports why the device can't be checked right now: the
+ * lock screen covers the home screen, so a health check would fail and roll back.
+ */
+export async function screenBlocker(adb: Adb, serial: string): Promise<string | null> {
+  let s = await screenState(adb, serial);
+  if (s.awake === false) {
+    await sh(adb, serial, ['input', 'keyevent', 'KEYCODE_WAKEUP']);
+    await adb.sleep(800);
+    s = await screenState(adb, serial);
+  }
+  if (s.awake === false) return 'the screen is off';
+  if (s.locked) return 'the screen is locked';
+  return null;
 }
 
 export async function deviceEpoch(adb: Adb, serial: string): Promise<number> {

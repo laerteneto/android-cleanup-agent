@@ -5,7 +5,7 @@ import { parseMeminfo, pssByPackage } from '../../src/parsers/meminfo.js';
 import { parseDumpsysPackages, parsePmList } from '../../src/parsers/packages.js';
 import { parseDf, parseGetprop, parseSettingsList, parseUptime } from '../../src/parsers/props.js';
 import { parseAccessibility, parseDeviceOwner, parseResolveActivity, parseWebview } from '../../src/parsers/roles.js';
-import { parseCpuinfo, parseCrashes, parseForeground, parseForegroundComponent, parsePlaying, parseThermal, parseTopAlarms } from '../../src/parsers/system.js';
+import { parseCpuinfo, parseCrashes, parseForeground, parseForegroundComponent, parseKeyguardShowing, parsePlaying, parseThermal, parseTopAlarms, parseWakefulness } from '../../src/parsers/system.js';
 import { parseDurationField, parseUsageStats } from '../../src/parsers/usage.js';
 
 // Excerpts in the exact formats an Android 14 device prints (identifiers replaced).
@@ -159,4 +159,21 @@ describe('roles', () => {
     expect(parseDeviceOwner('no owners\n')).toBeNull();
     expect(parseDeviceOwner('Device owner (User 0): com.corp.mdm/.Admin\n')).toBe('com.corp.mdm');
   });
+
+  it('reads whether the screen is on and locked (Android 16 format), null when absent', () => {
+    expect(parseWakefulness('POWER MANAGER (dumpsys power)\n  mWakefulness=Dozing\n  mWakefulnessChanging=false\n')).toBe('Dozing');
+    expect(parseWakefulness('nothing here')).toBeNull();
+    expect(parseKeyguardShowing('  KeyguardController:\n    mKeyguardShowing=true\n    mKeyguardGoingAway=false\n')).toBe(true);
+    expect(parseKeyguardShowing('    mKeyguardShowing=false\n')).toBe(false);
+    expect(parseKeyguardShowing('ACTIVITY MANAGER ACTIVITIES\n')).toBeNull();
+  });
+
+  it('spots an app whose code was deleted but whose record and data were kept (pkg=null)', () => {
+    const text = 'Packages:\n  Package [com.example.gone] (aec344a):\n    appId=10310\n    pkg=null\n    versionCode=5 targetSdk=36\n    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n    User 0: ceDataInode=5794 installed=false hidden=false enabled=0 instant=false\n  Package [com.example.here] (b1):\n    pkg=Package{b1 com.example.here}\n    versionCode=1\n';
+    const m = parseDumpsysPackages(text);
+    expect(m.get('com.example.gone')).toMatchObject({ codeGone: true, system: false });
+    expect(m.get('com.example.gone')!.users.get(0)).toEqual({ installed: false, enabledState: 0 });
+    expect(m.get('com.example.here')!.codeGone).toBe(false);
+  });
 });
+

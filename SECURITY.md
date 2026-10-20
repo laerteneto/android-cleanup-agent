@@ -13,7 +13,8 @@ data or the system partition. The only changes it makes are:
 
 | Change | Command | Undo |
 |---|---|---|
-| Remove a preinstalled app for your user (data kept) | `pm uninstall -k --user N` | `cmd package install-existing --user N` |
+| Remove a preinstalled (system image) app for your user (data kept) | `pm uninstall -k --user N` | `cmd package install-existing --user N` |
+| Remove an unused app you installed (data kept, code deleted by Android) | `pm uninstall -k --user N` | Reinstall from its store |
 | Remove an app you installed (data kept where Android allows) | `pm uninstall -k --user N` | reinstall from the Play Store |
 | Turn an app off | `pm disable-user --user N` | `pm enable --user N` |
 | Change a catalog setting | `settings put`, `cmd location`, `cmd bluetooth_manager` / `svc bluetooth` | original value put back (or deleted) |
