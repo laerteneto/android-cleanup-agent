@@ -145,7 +145,7 @@ every change). Full list: [`catalog/never-touch.yaml`](catalog/never-touch.yaml)
 - **Not restorable by the tool:** apps that are not part of the system image, such
   as apps you installed yourself or ones the carrier added during setup. Android
   deletes their code when they are removed, even with `-k`, and keeps only their
-  data, so reinstall them from their store and they pick up where they were. A
+  data, so the way back is reinstalling them from their store. A
   catalog app that is a store-installed copy on your device is turned off instead
   of removed for this reason. Also not restorable: cleared app data, and anything after a factory reset (a reset
   brings every preinstalled app back anyway).

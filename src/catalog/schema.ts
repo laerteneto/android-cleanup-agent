@@ -25,9 +25,11 @@ export const PackageEntry = z
     homeCheck: z.boolean().default(false),
     notes: z.array(z.string().max(300)).default([]),
     confidence: z.enum(['verified', 'community']),
-    verifiedOn: z.array(z.string()).default([]),
+    /** The kinds of device it was tested on; "verified" counts only there. */
+    verifiedOn: z.array(DeviceClass).default([]),
   })
-  .strict();
+  .strict()
+  .refine((e) => e.confidence !== 'verified' || e.verifiedOn.length > 0, { message: 'a verified entry must say which device classes it was verified on (verifiedOn)' });
 export type PackageEntry = z.infer<typeof PackageEntry>;
 
 export const Match = z

@@ -154,7 +154,7 @@ export function buildPlan(input: PlanInput): Plan {
     }
     let risk = entry.riskByClass[device.deviceClass] ?? entry.risk;
     // "verified" counts only on the kind of device it was proven on.
-    const verifiedHere = entry.confidence === 'verified' && (entry.verifiedOn.length === 0 || entry.verifiedOn.includes(device.deviceClass));
+    const verifiedHere = entry.confidence === 'verified' && entry.verifiedOn.includes(device.deviceClass);
     if (!verifiedHere) risk = atLeast(risk, 'medium');
     items.push({
       id: itemId(fp, 'package', entry.id, audit.run_id),
@@ -199,7 +199,7 @@ export function buildPlan(input: PlanInput): Plan {
         requiresExplicit: true,
         recommended: false,
         homeCheck: false,
-        notes: [p.usage.lastUsed ? `Not opened for ${Math.round(idle)} days.` : 'Never opened since usage tracking began.', ...(CARRIER_INSTALLERS.has(p.installer ?? '') ? ['Put on the device by the carrier during setup.'] : []), `Removing deletes the app; the device keeps its data. To get it back, reinstall it from ${storeName(p.installer)} and it picks up where it was.`],
+        notes: [p.usage.lastUsed ? `Not opened for ${Math.round(idle)} days.` : 'Never opened since usage tracking began.', ...(CARRIER_INSTALLERS.has(p.installer ?? '') ? ['Put on the device by the carrier during setup.'] : []), `Removing deletes the app; the device keeps its data. To get it back, reinstall it from ${storeName(p.installer)}.`],
       });
     }
   }

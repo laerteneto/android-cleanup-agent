@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadCatalog } from '../../src/catalog/loader.js';
+import { PackageEntry } from '../../src/catalog/schema.js';
 import { assertHost } from '../../src/connect.js';
 import { DEVICE_CLASSES } from '../../src/core/schemas.js';
 import { classify, globMatch, UnsupportedDeviceError } from '../../src/device.js';
@@ -57,6 +58,13 @@ describe('catalog', () => {
   it('loads with no duplicates and no overlap with never-touch', () => {
     expect(catalog.packages.length).toBeGreaterThan(40);
     expect(new Set(catalog.packages.map((p) => p.id)).size).toBe(catalog.packages.length);
+  });
+  it('a verified entry must name the device classes it was verified on', () => {
+    const entry = { id: 'com.example.app', title: 'Example', vendor: 'example', category: 'oem-apps', risk: 'low', action: 'disable', confidence: 'verified' };
+    expect(PackageEntry.safeParse(entry).success).toBe(false);
+    expect(PackageEntry.safeParse({ ...entry, verifiedOn: ['phone'] }).success).toBe(true);
+    expect(PackageEntry.safeParse({ ...entry, verifiedOn: ['fridge'] }).success).toBe(false);
+    for (const p of catalog.packages) if (p.confidence === 'verified') expect(p.verifiedOn.length, p.id).toBeGreaterThan(0);
   });
   it('core system packages are protected on every class', () => {
     const roles = { home: null, ime: null, dialer: null, sms: null, assistant: null, webview: null, accessibility: [], deviceOwner: null };

@@ -6,7 +6,7 @@ import { applyPlan, FingerprintMismatchError } from '../../src/apply.js';
 import { isApproved } from '../../src/approvals.js';
 import { runAudit } from '../../src/audit.js';
 import { loadCatalog } from '../../src/catalog/loader.js';
-import type { Answers, Approvals, Plan } from '../../src/core/schemas.js';
+import type { Answers, Approvals, DeviceClass, Plan } from '../../src/core/schemas.js';
 import { BusyError, clearAppData, rebootDevice } from '../../src/device-actions.js';
 import { UnsupportedDeviceError } from '../../src/device.js';
 import { buildPlan } from '../../src/plan.js';
@@ -372,9 +372,9 @@ describe('other device classes', () => {
   it('counts a verified entry only on the kind of device it was proven on', async () => {
     const { plan, audit, store } = await setup(phone(), {}, { uses: ['calls', 'sms'], power: 'battery', symptoms: [], keep: [] });
     const target = plan.items.find((i) => i.pkg && i.catalogId === i.pkg)!.pkg!;
-    const withEntry = (verifiedOn: string[]) => ({ ...catalog, packages: catalog.packages.map((p) => (p.id === target ? { ...p, risk: 'low' as const, riskByClass: {}, confidence: 'verified' as const, verifiedOn } : p)) });
+    const withEntry = (verifiedOn: DeviceClass[]) => ({ ...catalog, packages: catalog.packages.map((p) => (p.id === target ? { ...p, risk: 'low' as const, riskByClass: {}, confidence: 'verified' as const, verifiedOn } : p)) });
     const { sha } = store.loadAudit(audit.run_id);
-    const on = (verifiedOn: string[]) => buildPlan({ audit, auditSha: sha, catalog: withEntry(verifiedOn), overlay, answers: plan.answers, now: new Date(audit.created_at) }).items.find((i) => i.catalogId === target)!;
+    const on = (verifiedOn: DeviceClass[]) => buildPlan({ audit, auditSha: sha, catalog: withEntry(verifiedOn), overlay, answers: plan.answers, now: new Date(audit.created_at) }).items.find((i) => i.catalogId === target)!;
     expect(on(['tablet-tv'])).toMatchObject({ risk: 'medium', recommended: false });
     expect(on(['phone'])).toMatchObject({ risk: 'low', recommended: true });
   });
