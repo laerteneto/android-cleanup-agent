@@ -56,6 +56,8 @@ export interface Faults {
   locked?: boolean;
   /** The screen is off; KEYCODE_WAKEUP turns it on. */
   asleep?: boolean;
+  /** Old devices without `svc power reboot`. */
+  noSvcPower?: boolean;
   /** After this many shell calls, a person unlocks the device. */
   unlockAfter?: number;
   /** After this many shell calls, the device locks itself (screen timeout). */
@@ -89,6 +91,8 @@ export class FakeAdb implements Adb {
   crashes: Array<{ at: number; proc: string }> = [];
   shellCalls = 0;
   rebooted = false;
+  /** Package changes not yet saved to disk: Android writes them ~10 s later. A raw `adb reboot` loses them. */
+  unsaved: Array<{ at: number; pkg: string; installed: boolean; enabled: boolean; codeGone: boolean }> = [];
   clock: number;
   connected = true;
 
@@ -125,6 +129,9 @@ export class FakeAdb implements Adb {
     if (a0 === 'pair') return args[2] === '123456' ? ok('Successfully paired to 192.0.2.10:37002 [guid=adb-demo]\n') : fail('Failed: Wrong password or connection was dropped.');
     if (a0 === 'connect') return ok(`connected to ${a1}\n`);
     if (a0 === '-s' && args[2] === 'reboot') {
+      // init restarts without the framework's shutdown: changes from the last 10 s are lost.
+      for (const u of this.unsaved.filter((x) => this.clock - x.at < 10_000).reverse()) Object.assign(this.pkg(u.pkg)!, { installed: u.installed, enabled: u.enabled, codeGone: u.codeGone });
+      this.unsaved = [];
       this.rebooted = true;
       this.connected = false;
       return ok();
@@ -248,6 +255,14 @@ export class FakeAdb implements Adb {
     if (cmd === 'dumpsys activity activities') return ok(`ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)\n  topResumedActivity=ActivityRecord{5bc917d u0 ${this.foregroundComponent} t274}\n  KeyguardController:\n    mKeyguardShowing=${Boolean(this.faults.locked)}\n`);
     if (cmd === 'dumpsys power') return ok(`POWER MANAGER (dumpsys power)\n  mWakefulness=${this.faults.asleep ? 'Asleep' : 'Awake'}\n`);
     if (cmd === 'logcat -b crash -d -v epoch') return ok(this.crashes.map((c) => `  ${c.at}.000  1234  1234 E AndroidRuntime: Process: ${c.proc}, PID: 1234`).join('\n') + '\n');
+    if (cmd === 'svc power reboot userrequested' && this.faults.noSvcPower) return fail('usage: svc power stayon [true|false|usb|ac|wireless]');
+    if (cmd === 'svc power reboot userrequested') {
+      // The power manager's shutdown saves pending package state first.
+      this.unsaved = [];
+      this.rebooted = true;
+      this.connected = false;
+      return { code: 255, stdout: '', stderr: 'error: closed' };
+    }
     if (a0 === 'input' && a1 === 'keyevent') {
       if (a2 === 'KEYCODE_WAKEUP') {
         this.faults.asleep = false;
@@ -302,6 +317,7 @@ export class FakeAdb implements Adb {
     if (!p || !p.known) return ok(op === 'uninstall' ? 'Failure [DELETE_FAILED_INTERNAL_ERROR]\n' : `Error: Unknown package: ${name}\n`);
     if (this.faults.refuse?.includes(name)) return ok(`Error: java.lang.SecurityException: Shell cannot change component state for ${name}\n`);
     const before = this.epoch();
+    this.unsaved.push({ at: this.clock, pkg: p.pkg, installed: p.installed, enabled: p.enabled, codeGone: p.codeGone });
     if (op === 'uninstall') {
       p.installed = false;
       // Real devices (checked on Android 16): a non-system app removed for its only

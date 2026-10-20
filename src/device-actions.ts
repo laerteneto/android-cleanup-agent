@@ -8,7 +8,7 @@ import type { Catalog } from './catalog/loader.js';
 import type { UserOverlay } from './catalog/schema.js';
 import { readRoles } from './device.js';
 import { clearData, playing, readPackage } from './ops.js';
-import type { Adb } from './platform/adb.js';
+import { type Adb, DeviceDroppedError, sh } from './platform/adb.js';
 import { assertPkg } from './platform/argv.js';
 import type { RunStore } from './runs.js';
 import { protectedReason } from './safety/never-touch.js';
@@ -35,9 +35,33 @@ export async function clearAppData(adb: Adb, store: RunStore, serial: string, au
 
 export class BusyError extends Error {}
 
-export async function rebootDevice(adb: Adb, serial: string, opts: { force?: boolean; store?: RunStore; runId?: string }): Promise<void> {
+/**
+ * Android saves app on/off changes to disk about 10 s after they are made. A raw
+ * `adb reboot` skips the normal shutdown, so changes from the last few seconds
+ * were lost (seen on a Galaxy S22: all 7 changes of a run came back). So: wait
+ * until the run's last change is this old, then restart through the power
+ * manager, whose shutdown saves pending package state.
+ */
+export const SETTLE_MS = 15_000;
+
+export async function rebootDevice(adb: Adb, serial: string, opts: { force?: boolean; store?: RunStore; runId?: string; onWaiting?: (message: string) => void }): Promise<void> {
   const busy = await playing(adb, serial);
   if (busy.length && !opts.force) throw new BusyError(`something is playing on the device (${busy.join(', ')}); restart later, or pass --force-while-playing`);
-  if (opts.store && opts.runId) opts.store.appendManifest(opts.runId, { at: adb.now().toISOString(), op: 'reboot', status: 'ok', target: 'device' });
-  await adb.host(['-s', serial, 'reboot'], { timeoutMs: 30_000 });
+  if (opts.store && opts.runId) {
+    const lastChange = Math.max(0, ...opts.store.readManifest(opts.runId).filter((e) => e.op !== 'skip' && e.op !== 'health' && e.op !== 'reboot').map((e) => Date.parse(e.at)));
+    const wait = lastChange + SETTLE_MS - adb.now().getTime();
+    if (wait > 0) {
+      opts.onWaiting?.(`waiting ${Math.ceil(wait / 1000)} s so the device saves the changes before restarting…`);
+      await adb.sleep(wait);
+    }
+    opts.store.appendManifest(opts.runId, { at: adb.now().toISOString(), op: 'reboot', status: 'ok', target: 'device' });
+  }
+  let viaPowerManager = true;
+  try {
+    const r = await sh(adb, serial, ['svc', 'power', 'reboot', 'userrequested'], { timeoutMs: 30_000 });
+    if (r.code !== 0 || /usage:|unknown|not found/i.test(r.stdout + r.stderr)) viaPowerManager = false;
+  } catch (e) {
+    if (!(e instanceof DeviceDroppedError)) throw e; // the connection going away is the restart
+  }
+  if (!viaPowerManager) await adb.host(['-s', serial, 'reboot'], { timeoutMs: 30_000 });
 }

@@ -69,3 +69,12 @@ Every change, skip, health check and rollback is appended and fsynced to
 Wireless debugging drops when the screen sleeps. The screen timeout is raised for
 the duration of a run as a logged transient change and put back at the end (or by
 `restore` if the run was interrupted).
+
+## ADR-011: Restart through the power manager, after the changes are saved
+Android writes per-user package state (installed, enabled) to disk about 10 s
+after a change. `adb reboot` makes init restart the device without the
+framework's shutdown, so anything not yet written is lost: on a Galaxy S22
+(Android 16) a restart a few seconds after a run brought all 7 changes back.
+`reboot` waits until the run's last change is 15 s old, then uses
+`svc power reboot`, whose shutdown saves pending package state; `adb reboot` is
+only the fallback for devices without it.

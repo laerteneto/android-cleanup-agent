@@ -33,6 +33,7 @@ const base = import.meta.env.BASE_URL;
 
   <h2>Playback guard</h2>
   <p>If something is playing, the health check waits instead of pressing Home, so it does not interrupt what you are watching. <code>reboot</code> is refused while something plays (unless you pass <code>--force-while-playing</code>).</p>
+  <p>Before restarting, <code>reboot</code> waits until Android has saved the run's changes (about 15 seconds after the last one) and restarts through Android's own shutdown, so a restart never undoes the cleanup.</p>
 
   <h2>Dropped connections</h2>
   <p>Wi-Fi connections drop. If the device disappears or a different device answers, <code>apply</code> stops with exit code 5. Reconnect and run <code>apply --yes --resume</code>; it continues where it left off and does not repeat finished items.</p>

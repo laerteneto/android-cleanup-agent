@@ -29,6 +29,10 @@ All notable changes to this project are documented here. The format follows
 - `apply --resume` did not retry items skipped because something was playing.
 - Running `plan` with no answers replaced the saved plan; it now shows it.
 - "Verified" catalog entries count only on the kind of device they were tested on.
+- A restart right after a run lost the run's changes: Android saves app on/off
+  state about 10 s later and a raw `adb reboot` skips the normal shutdown.
+  `reboot` now waits until the last change is 15 s old and restarts through
+  the power manager (`svc power reboot`), falling back to `adb reboot`.
 - Claude Code plugin: `cleanup`, `audit`, `restore` skills; risk judge and report
   agents; bash and write guard hooks.
 

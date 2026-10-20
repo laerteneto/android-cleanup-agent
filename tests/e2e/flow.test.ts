@@ -343,6 +343,31 @@ describe('separate gates', () => {
     expect(adb.pkg('com.android.chrome')?.dataCleared).toBe(true);
   });
 
+  it('restart keeps the run: waits for Android to save the changes, then restarts through the power manager', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec);
+    const prime = byPkg(plan, 'com.amazon.avod.thirdpartyclient')!;
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: { ...approveAll(plan, planSha), categories: {}, items: { [prime.id]: true } }, catalog, overlay });
+    const waits: string[] = [];
+    await rebootDevice(adb, spec.serial, { store, runId: plan.run_id, onWaiting: (m) => waits.push(m) });
+    expect(waits[0]).toMatch(/saves the changes/);
+    expect(adb.log.some((c) => c.join(' ') === 'svc power reboot userrequested')).toBe(true);
+    expect(adb.hostLog.some((c) => c[2] === 'reboot')).toBe(false);
+    adb.connected = true;
+    expect((await verifyRun(adb, spec.serial, audit, store.readManifest(plan.run_id))).map((r) => r.status)).toEqual(['held']);
+  });
+
+  it('without svc power, waits long enough before a raw adb reboot', async () => {
+    const spec = tabletTv();
+    const { adb, store, audit, plan, planSha } = await setup(spec, { noSvcPower: true });
+    const prime = byPkg(plan, 'com.amazon.avod.thirdpartyclient')!;
+    await applyPlan({ adb, store, serial: spec.serial, audit, plan, planSha, approvals: { ...approveAll(plan, planSha), categories: {}, items: { [prime.id]: true } }, catalog, overlay });
+    await rebootDevice(adb, spec.serial, { store, runId: plan.run_id });
+    expect(adb.hostLog.some((c) => c[2] === 'reboot')).toBe(true);
+    adb.connected = true;
+    expect((await verifyRun(adb, spec.serial, audit, store.readManifest(plan.run_id))).map((r) => r.status)).toEqual(['held']);
+  });
+
   it('reboot refuses while something is playing', async () => {
     const spec = tabletTv();
     const adb = new FakeAdb(spec, { playing: ['com.netflix.mediaclient'] });

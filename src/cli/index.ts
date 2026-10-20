@@ -358,7 +358,7 @@ program
     const fp = runId ? s.loadAudit(runId).audit.device.fingerprint : undefined;
     const d = await device(o.serial, fp);
     if (!o.yes) throw new ExitError(`This restarts ${d.serial}. Wireless debugging switches off afterwards. Run again with --yes.`, 4);
-    await rebootDevice(adb(), d.serial, { force: Boolean(o.forceWhilePlaying), store: s, ...(runId ? { runId } : {}) });
+    await rebootDevice(adb(), d.serial, { force: Boolean(o.forceWhilePlaying), store: s, onWaiting: (m) => process.stderr.write(`${dim(m)}\n`), ...(runId ? { runId } : {}) });
     process.stdout.write(`Restarting ${d.serial}. Wireless debugging will be off afterwards: turn it on, then run \`android-cleanup-agent connect --host <ip>\` and \`verify\`.\n`);
   });
 
