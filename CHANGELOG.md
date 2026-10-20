@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-20
+
+First public release. Tested end to end (audit, plan, apply, restart, verify,
+restore) on a Galaxy S22 with Android 16; the tablet-TV entries come from a
+cleanup of a Thomson Go Plus Pro (Android 14).
+
 ### Added
 - CLI: `doctor`, `devices`, `pair`, `connect`, `audit`, `plan`, `approvals`, `apply`,
   `reboot`, `verify`, `restore`, `results`, `report`, `clear-data`, `runs`, `catalog`.

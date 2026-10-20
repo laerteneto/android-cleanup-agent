@@ -1,8 +1,9 @@
 # Going public (v1.0.0 checklist)
 
-1. Dogfood: full flow on the Thomson tablet-TV and on an Android 14 phone,
-   including `restore` and `verify` after a restart. Mark tested catalog entries
-   `verified`.
+1. Dogfood: full flow on a phone (done 2026-10-20: Galaxy S22, Android 16,
+   including restart, `verify` and `restore`) and the tablet-TV entries
+   (validated by the hand cleanup of the Thomson on 2026-10-19). Mark tested
+   catalog entries `verified` with `verifiedOn`.
 2. `npm run check` and `npm run check:forbidden -- --history` with the private list.
 3. gitleaks on the full history.
 4. `claude plugin validate . --strict` and `claude plugin validate .claude-plugin/plugin.json --strict`.
