@@ -1,6 +1,6 @@
 # android-cleanup-agent
 
-Clean up and speed up an Android **phone, tablet or TV** over adb, **without root**.
+Clean up and speed up an Android **phone, tablet, TV, TV box or watch** over adb, **without root**.
 It audits the device, asks how you use it, proposes a plan you sign off item by
 item, applies it with health checks, and shows the before/after numbers. Every
 change is logged and can be undone.
